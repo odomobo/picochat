@@ -122,7 +122,9 @@ python -m nanochat.dataset -n 240  # Downloads 240 shards for d20 model
 The GPT implementation uses a modern transformer with:
 - **Rotary Positional Embeddings (RoPE)**: No learned positional embeddings
 - **QK Normalization**: Normalizes queries and keys in attention
-- **Untied Weights**: Separate token embedding (wte) and language model head (lm_head)
+- **Weight Tying (Optional)**: Configurable via `tie_weights` parameter
+  - `tie_weights=False` (default): Separate wte and lm_head (original behavior)
+  - `tie_weights=True`: Tie wte and lm_head to share weights (reduces params by ~50%)
 - **ReLU^2 Activation**: In MLP layers instead of GELU
 - **RMSNorm**: Functional normalization without learnable parameters, applied after token embedding and after each block
 - **No Bias**: Linear layers have no bias terms
@@ -138,12 +140,17 @@ Model size is determined by `--depth` parameter:
 
 For tiny experimental models (<100M params), use vocab_size=24576 (3 × 2^13) to reduce embedding overhead.
 
-### Dual Optimizer Setup (nanochat/gpt.py:213-242)
+### Dual Optimizer Setup (nanochat/gpt.py:222-270)
 
 **Critical architectural pattern**: The model uses two separate optimizers:
 1. **AdamW** for embeddings and unembedding (wte, lm_head)
    - Learning rates scaled by `(model_dim / 768)^-0.5`
-   - Default LRs: embedding_lr=0.2, unembedding_lr=0.004
+   - **When tie_weights=False** (untied, default):
+     - embedding_lr=0.2 for wte
+     - unembedding_lr=0.004 for lm_head
+   - **When tie_weights=True** (tied):
+     - tied_weights_lr=0.2 for shared wte/lm_head weights
+     - Only one parameter group (wte only, lm_head doesn't exist)
 2. **Muon** for all transformer matrix parameters (attention, MLP)
    - Default LR: matrix_lr=0.02
 
@@ -174,6 +181,30 @@ Models are saved to `~/.cache/nanochat/{model_tag}/` by default:
 - `mid.pt`: After midtraining
 - `sft.pt`: After supervised fine-tuning
 - `rl.pt`: After reinforcement learning (optional)
+
+**Backward Compatibility Pattern**: When adding new features to the model architecture, follow this pattern to ensure old checkpoints continue to work:
+
+1. **Add to GPTConfig dataclass with backward-compatible default:**
+   ```python
+   @dataclass
+   class GPTConfig:
+       # ...existing fields...
+       new_feature: bool = False  # False = old behavior (original)
+   ```
+
+2. **Add fallback logic in checkpoint_manager.py:build_model():**
+   ```python
+   if "new_feature" not in model_config_kwargs:
+       model_config_kwargs["new_feature"] = False  # fallback to old behavior
+       log0("Warning: new_feature not found in checkpoint, assuming False (old behavior)")
+   ```
+
+3. **The fallback value must preserve original behavior:**
+   - Old checkpoints → work exactly as before (no breaking changes)
+   - New checkpoints → can use the new feature
+   - Example: `tie_weights` defaults to `False` (untied, original behavior)
+
+This pattern enables continuous feature additions while maintaining full backward compatibility with all previously trained models.
 
 ### Inference Engine (nanochat/engine.py)
 
