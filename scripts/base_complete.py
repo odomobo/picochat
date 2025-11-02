@@ -11,6 +11,7 @@ Usage:
 """
 import argparse
 import sys
+import time
 import torch
 from nanochat.common import compute_init, autodetect_device_type
 from contextlib import nullcontext
@@ -90,6 +91,7 @@ while True:
             "max_tokens": args.max_tokens,
             "temperature": args.temperature,
             "top_k": args.top_k,
+            "seed": int(time.time() * 1000) % (2**31),  # Different seed each time
         }
 
         with autocast_ctx:
