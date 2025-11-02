@@ -353,8 +353,79 @@ python -m scripts.base_train
 ```
 
 ### Accessing Artifacts
-Default base directory: `~/.cache/nanochat/`
-Override with: `export NANOCHAT_BASE_DIR=/path/to/artifacts`
+Directory structure has been split for running multiple experiments:
+- `NANOCHAT_DATA_DIR`: Shared immutable data (training shards, tokenizer, eval bundles)
+- `NANOCHAT_RUN_DIR`: Run-specific outputs (checkpoints, reports, configs)
+
+Set via `init_run.sh` or manually:
+```bash
+export NANOCHAT_DATA_DIR="$PWD/working/data"
+export NANOCHAT_RUN_DIR="$PWD/working/runs/my_experiment"
+```
 
 ### Debugging Print Statements
 Use `print0()` from nanochat.common - only prints from rank 0 in distributed training.
+
+## Experimental Workflow (Pretraining Focus)
+
+**Philosophy**: This codebase is being adapted for rapid experimentation with small pretraining models. The focus is on understanding scaling laws and architecture choices at the <100M parameter scale, where instruct finetuning provides minimal value. The workflow prioritizes explicit configuration, reproducibility, and isolation of experimental runs.
+
+### Three-Step Run Initialization
+
+The experimental workflow enforces upfront configuration for reproducibility:
+
+1. **One-time setup** (already done):
+   - Download training data shards to shared `NANOCHAT_DATA_DIR`
+   - Train tokenizer once, shared across all experiments
+
+2. **Per-experiment initialization**:
+   ```bash
+   source init_run.sh experiment_name
+   # - Sets NANOCHAT_RUN_DIR=working/runs/experiment_name
+   # - Sets NANOCHAT_DATA_DIR=working/data
+   # - Activates venv
+   # - Runs interactive configuration wizard
+   # - Creates config.py in run directory
+   # - Initializes report (errors if already exists)
+   ```
+
+3. **Execute training**:
+   ```bash
+   bash start_run.sh
+   # - Runs base_train.py (requires config.py)
+   # - Evaluates model
+   # - Generates report
+   ```
+
+### Configuration Philosophy
+
+**Explicit over implicit**: Training scripts (currently `base_train.py`) require a `config.py` file in `$NANOCHAT_RUN_DIR`. This prevents accidental runs with default parameters and ensures every experiment is documented.
+
+The configuration wizard asks only essential questions:
+- `depth`: Model architecture (default: 4 for small experiments)
+- `device_batch_size`: VRAM constraint (default: 32)
+- `target_param_data_ratio`: Chinchilla scaling (default: 20)
+- `total_batch_size`: Optimization batch size (default: 524288)
+- `max_seq_len`: Context length (default: 2048)
+
+Validation is minimal but catches common errors (e.g., batch size divisibility).
+
+### Why Pretraining Only?
+
+At small scales (<100M parameters), the models lack the capacity to benefit meaningfully from instruct finetuning. The experimental focus is on understanding:
+- Architecture efficiency at different scales
+- Data requirements and scaling laws
+- Tokenizer impact on model performance
+- Training dynamics and optimization
+
+Midtraining, SFT, and RL stages remain in the codebase but are not part of the current experimental workflow.
+
+### Codebase Adaptation Notes
+
+The codebase is being "hacked" (adapted) for experimental purposes rather than maintained as a general framework:
+- Configuration is now required, not optional
+- Focus on single pipeline stage (pretraining)
+- Tooling optimized for rapid iteration and comparison
+- Expect some features to be temporarily bypassed for experimentation
+
+This is intentional and aligned with the nanochat philosophy of "hackable baseline" over "configurable framework".

@@ -44,5 +44,8 @@ set -x
 # Initialize the report (will error if already exists)
 python -m nanochat.report init
 
+# Run configuration wizard (will error if config already exists)
+python -m nanochat.configure
+
 # Disable debug mode
 set +x

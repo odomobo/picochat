@@ -60,6 +60,25 @@ core_metric_max_per_task = 500 # examples per task in estimating the core metric
 sample_every = 2000 # every how many steps to sample from the model
 # Output
 model_tag = "" # optionally override the model tag for the output checkpoint directory name
+
+# Require configuration file to exist in NANOCHAT_RUN_DIR
+run_dir = os.environ.get("NANOCHAT_RUN_DIR")
+if not run_dir:
+    raise RuntimeError(
+        "NANOCHAT_RUN_DIR environment variable is not set.\n"
+        "Please run: source init_run.sh <run_name>"
+    )
+config_path = os.path.join(run_dir, "config.py")
+if not os.path.exists(config_path):
+    raise RuntimeError(
+        f"Configuration file not found: {config_path}\n"
+        "This run has not been configured yet.\n"
+        "The configuration should have been created by init_run.sh.\n"
+        "If you skipped that step, run: python -m nanochat.configure"
+    )
+# Prepend config file to sys.argv so configurator.py will load it
+sys.argv.insert(1, config_path)
+
 # now allow CLI to override the settings via the configurator lol
 config_keys = [k for k,v in globals().items() if not k.startswith('_') and isinstance(v, (int, float, bool, str))]
 exec(open(os.path.join('nanochat', 'configurator.py')).read()) # overrides from command line or config file
