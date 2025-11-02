@@ -109,25 +109,29 @@ wait $DATASET_DOWNLOAD_PID
 
 echo "Training configuration:"
 echo "  Target tokens: 500M"
-echo "  Batch size: 524,288 tokens"
+echo "  Total batch size: 524,288 tokens"
+echo "  Device batch size: 48 (optimized for RTX 3090 24GB)"
+echo "  Gradient accumulation steps: ~11 (524,288 / (48 × 2048))"
 echo "  Iterations: ~954 steps"
+echo "  Expected VRAM: ~20.8 GB"
 echo "  Expected model: depth=4, model_dim=256, num_heads=2"
 echo "  WARNING: This is NOT the target architecture (need dim=512, heads=8)"
 
 # Pretrain the model
 # Using depth=4 which gives model_dim=256, num_heads=2 (NOT our target 512/8!)
-torchrun --standalone --nproc_per_node=8 -m scripts.base_train -- \
+# Single GPU (RTX 3090 24GB): using batch_size=48 (20.8GB VRAM, 86.7% utilization)
+python -m scripts.base_train -- \
   --depth=4 \
   --num_iterations=954 \
   --target_param_data_ratio=-1 \
-  --device_batch_size=32 \
+  --device_batch_size=48 \
   --run=$WANDB_RUN
 
 # Evaluate the model on train/val data
-torchrun --standalone --nproc_per_node=8 -m scripts.base_loss
+python -m scripts.base_loss
 
 # Evaluate on CORE tasks
-torchrun --standalone --nproc_per_node=8 -m scripts.base_eval
+python -m scripts.base_eval
 
 # -----------------------------------------------------------------------------
 # Generate report
@@ -135,6 +139,9 @@ python -m nanochat.report generate
 
 echo ""
 echo "Pretraining complete!"
-echo "Note: Model architecture is depth=4, dim=256, heads=2"
-echo "      This differs from target architecture (dim=512, heads=8)"
-echo "      See TODO comments at top of script for required changes."
+echo "Training summary:"
+echo "  - Device batch size: 48 (RTX 3090 optimized)"
+echo "  - VRAM usage: ~20.8 GB / 24 GB"
+echo "  - Model architecture: depth=4, dim=256, heads=2"
+echo "  - NOTE: This differs from target architecture (dim=512, heads=8)"
+echo "  - See TODO comments at top of script for required changes."

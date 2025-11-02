@@ -129,8 +129,8 @@ def main():
     print("\nNote: This assumes training mode with gradient computation enabled.")
     print("      Inference mode uses much less memory (no optimizer, no gradients).\n")
 
-    # Test different batch sizes
-    batch_sizes = [1, 2, 4, 8, 16, 32]
+    # Test different batch sizes (iterate in steps of 8 up to 64)
+    batch_sizes = [8, 16, 24, 32, 40, 48, 56, 64]
     available_vram = 24 * 1e9  # 24 GB for RTX 3090
 
     print("\n" + "=" * 80)
