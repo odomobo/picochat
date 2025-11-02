@@ -126,7 +126,7 @@ python -m scripts.base_train \
   --depth=4 \
   --num_iterations=954 \
   --target_param_data_ratio=-1 \
-  --device_batch_size=48 \
+  --device_batch_size=32 \
   --run=$WANDB_RUN
 
 # Evaluate the model on train/val data
