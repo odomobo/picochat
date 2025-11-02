@@ -41,6 +41,20 @@ def get_string_input(prompt, default):
     return response
 
 
+def get_bool_input(prompt, default):
+    """Get boolean input with default value (y/n)."""
+    default_str = "y" if default else "n"
+    while True:
+        response = input(f"{prompt} (y/n) [default: {default_str}]: ").strip().lower()
+        if not response:
+            return default
+        if response in ['y', 'yes']:
+            return True
+        if response in ['n', 'no']:
+            return False
+        print(f"  ERROR: Please enter 'y' or 'n'")
+
+
 def main():
     """Run the interactive configuration wizard."""
 
@@ -82,6 +96,7 @@ def main():
     depth = get_int_input("Model depth (number of transformer layers)", default=4)
     default_model_dim = 512
     model_dim = get_int_input(f"Model dim (embedding dimension)", default=default_model_dim)
+    tie_weights = get_bool_input("Tie embedding weights (wte and lm_head)? Reduces params by ~50%", default=True)
     device_batch_size = get_int_input("Device batch size (sequences per GPU)", default=32)
     target_param_data_ratio = get_int_input("Target param:data ratio (Chinchilla=20, -1=explicit iterations)", default=20)
     total_batch_size = get_int_input("Total batch size (tokens)", default=524288)
@@ -115,11 +130,17 @@ def main():
 
     # Calculate parameter counts
     vocab_size = 24576  # 3 * 2^13, appropriate for tiny models
-    wte_params = vocab_size * model_dim
-    lm_head_params = vocab_size * model_dim
     # Per layer: attention (4 * model_dim^2) + MLP (8 * model_dim^2) = 12 * model_dim^2
     transformer_params = depth * 12 * model_dim * model_dim
-    total_params = wte_params + transformer_params + lm_head_params
+
+    if tie_weights:
+        wte_params = vocab_size * model_dim  # Shared with lm_head
+        lm_head_params = 0  # Tied to wte
+        total_params = wte_params + transformer_params
+    else:
+        wte_params = vocab_size * model_dim
+        lm_head_params = vocab_size * model_dim
+        total_params = wte_params + transformer_params + lm_head_params
 
     print()
     print("Derived architecture:")
@@ -127,13 +148,17 @@ def main():
     print(f"  Model dim: {model_dim}")
     print(f"  Num heads: {num_heads}")
     print(f"  Head dim: 128")
+    print(f"  Weight tying: {'enabled' if tie_weights else 'disabled'}")
     print()
     print("Parameter count:")
-    print(f"  wte (embeddings):        {wte_params:>12,} ({wte_params/1e6:>6.2f}M)")
-    print(f"  Transformer layers:      {transformer_params:>12,} ({transformer_params/1e6:>6.2f}M)")
-    print(f"  lm_head (unembedding):   {lm_head_params:>12,} ({lm_head_params/1e6:>6.2f}M)")
+    if tie_weights:
+        print(f"  wte (tied with lm_head):     {wte_params:>12,} ({wte_params/1e6:>6.2f}M)")
+    else:
+        print(f"  wte (embeddings):            {wte_params:>12,} ({wte_params/1e6:>6.2f}M)")
+        print(f"  lm_head (unembedding):       {lm_head_params:>12,} ({lm_head_params/1e6:>6.2f}M)")
+    print(f"  Transformer layers:          {transformer_params:>12,} ({transformer_params/1e6:>6.2f}M)")
     print(f"  {'─' * 50}")
-    print(f"  Total:                   {total_params:>12,} ({total_params/1e6:>6.2f}M)")
+    print(f"  Total:                       {total_params:>12,} ({total_params/1e6:>6.2f}M)")
     print()
 
     # Display batch info
@@ -156,6 +181,7 @@ run = "{run_name}"  # wandb run name ("dummy" disables wandb logging)
 depth = {depth}
 model_dim = {model_dim}  # aspect ratio {model_dim / depth if depth != 0 else 0:.1f} (or custom)
 max_seq_len = {max_seq_len}
+tie_weights = {str(tie_weights)}  # tie wte and lm_head weights (reduces params by ~50%)
 
 # Optimization
 device_batch_size = {device_batch_size}

@@ -68,6 +68,12 @@ def build_model(checkpoint_dir, step, device, phase):
     # Hack: fix torch compile issue, which prepends all keys with _orig_mod.
     model_data = {k.lstrip("_orig_mod."): v for k, v in model_data.items()}
     model_config_kwargs = meta_data["model_config"]
+
+    # Backward compatibility: if tie_weights not in old checkpoints, assume False (untied)
+    if "tie_weights" not in model_config_kwargs:
+        model_config_kwargs["tie_weights"] = False
+        log0("Warning: tie_weights not found in checkpoint metadata, assuming False (old untied model)")
+
     log0(f"Building model with config: {model_config_kwargs}")
     model_config = GPTConfig(**model_config_kwargs)
     with torch.device("meta"):

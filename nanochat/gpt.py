@@ -31,6 +31,7 @@ class GPTConfig:
     n_head: int = 6 # number of query heads
     n_kv_head: int = 6 # number of key/value heads (MQA)
     n_embd: int = 768
+    tie_weights: bool = False # tie wte and lm_head weights (reduces params by ~50%)
 
 
 def norm(x):
@@ -143,7 +144,13 @@ class GPT(nn.Module):
             "wte": nn.Embedding(config.vocab_size, config.n_embd),
             "h": nn.ModuleList([Block(config, layer_idx) for layer_idx in range(config.n_layer)]),
         })
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        # Conditionally create lm_head based on tie_weights
+        if config.tie_weights:
+            # Don't create separate lm_head, will use wte.weight directly in forward()
+            self.lm_head = None
+        else:
+            # Original behavior: separate lm_head
+            self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
         # To support meta device initialization, we init the rotary embeddings here, but it's fake
         # As for rotary_seq_len, these rotary embeddings are pretty small/cheap in memory,
         # so let's just over-compute them, but assert fail if we ever reach that amount.
@@ -156,8 +163,10 @@ class GPT(nn.Module):
 
     def init_weights(self):
         self.apply(self._init_weights)
-        # zero out classifier weights
-        torch.nn.init.zeros_(self.lm_head.weight)
+        # zero out classifier weights (if not tied)
+        if not self.config.tie_weights:
+            torch.nn.init.zeros_(self.lm_head.weight)
+        # else: tied weights keep the N(0, 1.0) init from _init_weights for wte
         # zero out c_proj weights in all blocks
         for block in self.transformer.h:
             torch.nn.init.zeros_(block.mlp.c_proj.weight)
@@ -261,18 +270,23 @@ class GPT(nn.Module):
 
         # Forward the lm_head (compute logits)
         softcap = 15
+        # Compute logits: use tied weights if enabled, otherwise use separate lm_head
+        if self.config.tie_weights:
+            # Use wte.weight as lm_head (transpose for correct dimensions)
+            logits = F.linear(x, self.transformer.wte.weight)
+        else:
+            logits = self.lm_head(x)
+
+        logits = softcap * torch.tanh(logits / softcap) # logits softcap
+
         if targets is not None:
             # training mode: compute and return the loss
             # TODO: experiment with Liger Kernels / chunked cross-entropy etc.
-            logits = self.lm_head(x)
-            logits = softcap * torch.tanh(logits / softcap) # logits softcap
             logits = logits.float() # use tf32/fp32 for logits
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1, reduction=loss_reduction)
             return loss
         else:
-            # inference mode: compute and return the logits
-            logits = self.lm_head(x)
-            logits = softcap * torch.tanh(logits / softcap) # logits softcap
+            # inference mode: return the logits
             return logits
 
     @torch.inference_mode()
