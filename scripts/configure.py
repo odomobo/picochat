@@ -80,7 +80,7 @@ def main():
 
     # Ask questions with defaults
     depth = get_int_input("Model depth (number of transformer layers)", default=4)
-    default_model_dim = 256
+    default_model_dim = 512
     model_dim = get_int_input(f"Model dim (embedding dimension)", default=default_model_dim)
     device_batch_size = get_int_input("Device batch size (sequences per GPU)", default=32)
     target_param_data_ratio = get_int_input("Target param:data ratio (Chinchilla=20, -1=explicit iterations)", default=20)
