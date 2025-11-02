@@ -18,12 +18,13 @@ icl_tasks:
   dataset_uri: world_knowledge/bigbench_qa_wikidata.jsonl
   num_fewshot: [10]
   icl_task_type: language_modeling
--
-  label: arc_easy
-  dataset_uri: world_knowledge/arc_easy.jsonl
-  num_fewshot: [10]
-  icl_task_type: multiple_choice
-  continuation_delimiter: "\nAnswer: "
+#### There's something wrong with this, but I don't know what. It's getting 38.17% (raw) on a 4-choice multiple choice quiz. But the questions are harder than it should be able to answer. I believe this is the result we'd expect if the data was split between 4 choice and 2 choice, but that doesn't appear to be the case. Anyhow, confusing.....
+#-
+#  label: arc_easy
+#  dataset_uri: world_knowledge/arc_easy.jsonl
+#  num_fewshot: [10]
+#  icl_task_type: multiple_choice
+#  continuation_delimiter: "\nAnswer: "
 #### Removed because useless for tiny models
 #-
 #  label: arc_challenge
@@ -48,11 +49,12 @@ icl_tasks:
   num_fewshot: [10]
   icl_task_type: multiple_choice
   continuation_delimiter: "\nAnswer: "
--
-  label: openbook_qa
-  dataset_uri: commonsense_reasoning/openbook_qa.jsonl
-  num_fewshot: [0]
-  icl_task_type: multiple_choice
+#### Removed because not a good signal, and not enough samples
+#-
+#  label: openbook_qa
+#  dataset_uri: commonsense_reasoning/openbook_qa.jsonl
+#  num_fewshot: [0]
+#  icl_task_type: multiple_choice
 -
   label: lambada_openai
   dataset_uri: language_understanding/lambada_openai.jsonl
@@ -64,32 +66,36 @@ icl_tasks:
 #  dataset_uri: language_understanding/hellaswag.jsonl
 #  num_fewshot: [10]
 #  icl_task_type: multiple_choice
--
-  label: winograd
-  dataset_uri: language_understanding/winograd_wsc.jsonl
-  num_fewshot: [0]
-  icl_task_type: schema
--
-  label: winogrande
-  dataset_uri: language_understanding/winogrande.jsonl
-  num_fewshot: [0]
-  icl_task_type: schema
+#### Removing because bad (inconsistent) signal
+#-
+#  label: winograd
+#  dataset_uri: language_understanding/winograd_wsc.jsonl
+#  num_fewshot: [0]
+#  icl_task_type: schema
+#### Removing because bad (inconsistent) signal
+#-
+#  label: winogrande
+#  dataset_uri: language_understanding/winogrande.jsonl
+#  num_fewshot: [0]
+#  icl_task_type: schema
 #### Removing because easy to game
 #-
 #  label: bigbench_dyck_languages
 #  dataset_uri: symbolic_problem_solving/bigbench_dyck_languages.jsonl
 #  num_fewshot: [10]
 #  icl_task_type: language_modeling
--
-  label: agi_eval_lsat_ar
-  dataset_uri: symbolic_problem_solving/agi_eval_lsat_ar.jsonl
-  num_fewshot: [3]
-  icl_task_type: multiple_choice
--
-  label: bigbench_operators
-  dataset_uri: symbolic_problem_solving/bigbench_operators.jsonl
-  num_fewshot: [10]
-  icl_task_type: language_modeling
+#### Removed because not a good signal, and consistently at 8% which indicates some kind of a problem...
+#-
+#  label: agi_eval_lsat_ar
+#  dataset_uri: symbolic_problem_solving/agi_eval_lsat_ar.jsonl
+#  num_fewshot: [3]
+#  icl_task_type: multiple_choice
+#### Removing because way too hard
+#-
+#  label: bigbench_operators
+#  dataset_uri: symbolic_problem_solving/bigbench_operators.jsonl
+#  num_fewshot: [10]
+#  icl_task_type: language_modeling
 #### removing because 0% accuracy
 #-
 #  label: bigbench_repeat_copy_logic
@@ -102,17 +108,19 @@ icl_tasks:
 #  dataset_uri: reading_comprehension/squad.jsonl
 #  num_fewshot: [10]
 #  icl_task_type: language_modeling
--
-  label: coqa
-  dataset_uri: reading_comprehension/coqa.jsonl
-  num_fewshot: [0]
-  icl_task_type: language_modeling
--
-  label: boolq
-  dataset_uri: reading_comprehension/boolq.jsonl
-  num_fewshot: [10]
-  icl_task_type: multiple_choice
-  continuation_delimiter: "\nAnswer: "
+#### Removed because too hard and not a consistent signal
+#-
+#  label: coqa
+#  dataset_uri: reading_comprehension/coqa.jsonl
+#  num_fewshot: [0]
+#  icl_task_type: language_modeling
+#### Removed because way too hard
+#-
+#  label: boolq
+#  dataset_uri: reading_comprehension/boolq.jsonl
+#  num_fewshot: [10]
+#  icl_task_type: multiple_choice
+#  continuation_delimiter: "\nAnswer: "
 #### Removing because slow and 0.5% accuracy
 #-
 #  label: bigbench_language_identification
