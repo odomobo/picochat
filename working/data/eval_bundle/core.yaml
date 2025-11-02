@@ -1,16 +1,18 @@
 icl_tasks:
--
-  label: hellaswag_zeroshot
-  dataset_uri: language_understanding/hellaswag.jsonl
-  num_fewshot: [0]
-  icl_task_type: multiple_choice
--
-  label: jeopardy
-  dataset_uri: world_knowledge/jeopardy_all.jsonl
-  num_fewshot: [10]
-  icl_task_type: language_modeling
-  continuation_delimiter: "\nAnswer: "
-  has_categories: true
+#### Removing because slow and likely too hard (0 shot and 10 shot have same results, although around 3.5% somehow)
+#-
+#  label: hellaswag_zeroshot
+#  dataset_uri: language_understanding/hellaswag.jsonl
+#  num_fewshot: [0]
+#  icl_task_type: multiple_choice
+#### Removing because 0%
+#-
+#  label: jeopardy
+#  dataset_uri: world_knowledge/jeopardy_all.jsonl
+#  num_fewshot: [10]
+#  icl_task_type: language_modeling
+#  continuation_delimiter: "\nAnswer: "
+#  has_categories: true
 -
   label: bigbench_qa_wikidata
   dataset_uri: world_knowledge/bigbench_qa_wikidata.jsonl
@@ -22,17 +24,19 @@ icl_tasks:
   num_fewshot: [10]
   icl_task_type: multiple_choice
   continuation_delimiter: "\nAnswer: "
--
-  label: arc_challenge
-  dataset_uri: world_knowledge/arc_challenge.jsonl
-  num_fewshot: [10]
-  icl_task_type: multiple_choice
-  continuation_delimiter: "\nAnswer: "
--
-  label: copa
-  dataset_uri: commonsense_reasoning/copa.jsonl
-  num_fewshot: [0]
-  icl_task_type: multiple_choice
+#### Removed because useless for tiny models
+#-
+#  label: arc_challenge
+#  dataset_uri: world_knowledge/arc_challenge.jsonl
+#  num_fewshot: [10]
+#  icl_task_type: multiple_choice
+#  continuation_delimiter: "\nAnswer: "
+#### Removed because -8% somehow, much worse than random chance. Suspect it's a bad test?
+#-
+#  label: copa
+#  dataset_uri: commonsense_reasoning/copa.jsonl
+#  num_fewshot: [0]
+#  icl_task_type: multiple_choice
 -
   label: commonsense_qa
   dataset_uri: commonsense_reasoning/commonsense_qa.jsonl
@@ -54,11 +58,12 @@ icl_tasks:
   dataset_uri: language_understanding/lambada_openai.jsonl
   num_fewshot: [0]
   icl_task_type: language_modeling
--
-  label: hellaswag
-  dataset_uri: language_understanding/hellaswag.jsonl
-  num_fewshot: [10]
-  icl_task_type: multiple_choice
+#### Removing because slow and likely too hard (0 shot and 10 shot have same results, although around 3.5% somehow)
+#-
+#  label: hellaswag
+#  dataset_uri: language_understanding/hellaswag.jsonl
+#  num_fewshot: [10]
+#  icl_task_type: multiple_choice
 -
   label: winograd
   dataset_uri: language_understanding/winograd_wsc.jsonl
@@ -69,36 +74,34 @@ icl_tasks:
   dataset_uri: language_understanding/winogrande.jsonl
   num_fewshot: [0]
   icl_task_type: schema
--
-  label: bigbench_dyck_languages
-  dataset_uri: symbolic_problem_solving/bigbench_dyck_languages.jsonl
-  num_fewshot: [10]
-  icl_task_type: language_modeling
+#### Removing because easy to game
+#-
+#  label: bigbench_dyck_languages
+#  dataset_uri: symbolic_problem_solving/bigbench_dyck_languages.jsonl
+#  num_fewshot: [10]
+#  icl_task_type: language_modeling
 -
   label: agi_eval_lsat_ar
   dataset_uri: symbolic_problem_solving/agi_eval_lsat_ar.jsonl
   num_fewshot: [3]
   icl_task_type: multiple_choice
 -
-  label: bigbench_cs_algorithms
-  dataset_uri: symbolic_problem_solving/bigbench_cs_algorithms.jsonl
-  num_fewshot: [10]
-  icl_task_type: language_modeling
--
   label: bigbench_operators
   dataset_uri: symbolic_problem_solving/bigbench_operators.jsonl
   num_fewshot: [10]
   icl_task_type: language_modeling
--
-  label: bigbench_repeat_copy_logic
-  dataset_uri: symbolic_problem_solving/bigbench_repeat_copy_logic.jsonl
-  num_fewshot: [10]
-  icl_task_type: language_modeling
--
-  label: squad
-  dataset_uri: reading_comprehension/squad.jsonl
-  num_fewshot: [10]
-  icl_task_type: language_modeling
+#### removing because 0% accuracy
+#-
+#  label: bigbench_repeat_copy_logic
+#  dataset_uri: symbolic_problem_solving/bigbench_repeat_copy_logic.jsonl
+#  num_fewshot: [10]
+#  icl_task_type: language_modeling
+#### removing because slow and 0.24% accuracy
+#-
+#  label: squad
+#  dataset_uri: reading_comprehension/squad.jsonl
+#  num_fewshot: [10]
+#  icl_task_type: language_modeling
 -
   label: coqa
   dataset_uri: reading_comprehension/coqa.jsonl
@@ -110,8 +113,9 @@ icl_tasks:
   num_fewshot: [10]
   icl_task_type: multiple_choice
   continuation_delimiter: "\nAnswer: "
--
-  label: bigbench_language_identification
-  dataset_uri: language_understanding/bigbench_language_identification.jsonl
-  num_fewshot: [10]
-  icl_task_type: multiple_choice
+#### Removing because slow and 0.5% accuracy
+#-
+#  label: bigbench_language_identification
+#  dataset_uri: language_understanding/bigbench_language_identification.jsonl
+#  num_fewshot: [10]
+#  icl_task_type: multiple_choice
