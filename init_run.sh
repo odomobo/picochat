@@ -19,6 +19,20 @@ export NANOCHAT_RUN_DIR="$PWD/working/runs/${RUN_NAME}"
 export WANDB_RUN="${RUN_NAME}"
 export OMP_NUM_THREADS=1
 
+# Disable debug mode
+set +x
+
+# Check if run directory already exists
+if [ -d "$NANOCHAT_RUN_DIR" ]; then
+    echo "Error: Run directory already exists: $NANOCHAT_RUN_DIR"
+    echo "This run has already been initialized."
+    echo "Choose a different run name or delete the existing directory."
+    return 1
+fi
+
+# Enable debug mode
+set -x
+
 # Create directories
 mkdir -p "$NANOCHAT_DATA_DIR"
 mkdir -p "$NANOCHAT_RUN_DIR"
