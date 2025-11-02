@@ -346,6 +346,12 @@ def generate_conversation(idx: int):
 num_conversations = 1000
 num_workers = 4
 
+# NOTE: This script needs to be updated to use the correct get_*_dir function.
+# get_base_dir() has been removed. Use either:
+# - get_data_dir() if this should be shared data (recommended for identity_conversations.jsonl)
+# - get_run_dir() if this should be run-specific output
+# Update the import from nanochat.common and replace the line below accordingly.
+raise NotImplementedError("This script needs to be updated to use get_data_dir() or get_run_dir() instead of the removed get_base_dir()")
 output_file = os.path.join(get_base_dir(), "identity_conversations.jsonl")
 # Wipe the file clean first to reset it
 if os.path.exists(output_file):

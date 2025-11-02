@@ -68,9 +68,6 @@ def get_run_dir():
     """
     if os.environ.get("NANOCHAT_RUN_DIR"):
         run_dir = os.environ.get("NANOCHAT_RUN_DIR")
-    elif os.environ.get("NANOCHAT_BASE_DIR"):
-        # Backward compatibility: NANOCHAT_BASE_DIR takes precedence if set
-        run_dir = os.environ.get("NANOCHAT_BASE_DIR")
     else:
         home_dir = os.path.expanduser("~")
         cache_dir = os.path.join(home_dir, ".cache")
@@ -78,20 +75,13 @@ def get_run_dir():
     os.makedirs(run_dir, exist_ok=True)
     return run_dir
 
-def get_base_dir():
-    """
-    Alias for get_run_dir() for backward compatibility.
-    Most code should continue using this, it now returns the run-specific directory.
-    """
-    return get_run_dir()
-
 def download_file_with_lock(url, filename):
     """
-    Downloads a file from a URL to a local path in the base directory.
+    Downloads a file from a URL to a local path in the data directory.
     Uses a lock file to prevent concurrent downloads among multiple ranks.
     """
-    base_dir = get_base_dir()
-    file_path = os.path.join(base_dir, filename)
+    data_dir = get_data_dir()
+    file_path = os.path.join(data_dir, filename)
     lock_path = file_path + ".lock"
 
     if os.path.exists(file_path):

@@ -20,7 +20,7 @@ from contextlib import nullcontext
 import pandas as pd
 import torch
 
-from nanochat.common import compute_init, compute_cleanup, print0, get_base_dir, get_data_dir, autodetect_device_type
+from nanochat.common import compute_init, compute_cleanup, print0, get_run_dir, get_data_dir, autodetect_device_type
 from nanochat.tokenizer import HuggingFaceTokenizer
 from nanochat.checkpoint_manager import load_model
 from nanochat.core_eval import evaluate_task
@@ -152,8 +152,8 @@ def main():
     core_metric = None
     centered_results = {}
     if ddp_rank == 0:
-        base_dir = get_base_dir()
-        output_csv_path = os.path.join(base_dir, "base_eval", f"{model_slug}.csv")
+        run_dir = get_run_dir()
+        output_csv_path = os.path.join(run_dir, "base_eval", f"{model_slug}.csv")
         os.makedirs(os.path.dirname(output_csv_path), exist_ok=True)
         results = out["results"]
         centered_results = out["centered_results"]

@@ -7,7 +7,7 @@ import time
 import argparse
 import torch
 from nanochat.tokenizer import RustBPETokenizer
-from nanochat.common import get_base_dir
+from nanochat.common import get_run_dir
 from nanochat.dataset import parquets_iter_batched
 
 # -----------------------------------------------------------------------------
@@ -53,8 +53,8 @@ print(f"Training time: {train_time:.2f}s")
 
 # -----------------------------------------------------------------------------
 # Save the tokenizer to disk
-base_dir = get_base_dir()
-tokenizer_dir = os.path.join(base_dir, "tokenizer")
+run_dir = get_run_dir()
+tokenizer_dir = os.path.join(run_dir, "tokenizer")
 tokenizer.save(tokenizer_dir)
 
 # -----------------------------------------------------------------------------

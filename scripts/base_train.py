@@ -21,7 +21,7 @@ import torch
 
 from nanochat.gpt import GPT, GPTConfig
 from nanochat.dataloader import tokenizing_distributed_data_loader
-from nanochat.common import compute_init, compute_cleanup, print0, DummyWandb, print_banner, get_base_dir, autodetect_device_type
+from nanochat.common import compute_init, compute_cleanup, print0, DummyWandb, print_banner, get_data_dir, get_run_dir, autodetect_device_type
 from nanochat.tokenizer import get_tokenizer, get_token_bytes
 from nanochat.checkpoint_manager import save_checkpoint
 from nanochat.loss_eval import evaluate_bpb
@@ -144,8 +144,8 @@ optimizers = model.setup_optimizers(unembedding_lr=unembedding_lr, embedding_lr=
 adamw_optimizer, muon_optimizer = optimizers
 
 # Initialize the DataLoaders for train/val
-base_dir = get_base_dir()
-tokens_dir = os.path.join(base_dir, "tokenized_data")
+data_dir = get_data_dir()
+tokens_dir = os.path.join(data_dir, "tokenized_data")
 train_loader = tokenizing_distributed_data_loader(device_batch_size, max_seq_len, split="train", device=device)
 build_val_loader = lambda: tokenizing_distributed_data_loader(device_batch_size, max_seq_len, split="val", device=device)
 x, y = next(train_loader) # kick off load of the very first batch of data
@@ -240,7 +240,7 @@ for step in range(num_iterations + 1):
     # save checkpoint at the end of the run (only on master process)
     if master_process and last_step:
         output_dirname = model_tag if model_tag else f"d{depth}" # e.g. d12
-        checkpoint_dir = os.path.join(base_dir, "base_checkpoints", output_dirname)
+        checkpoint_dir = os.path.join(get_run_dir(), "base_checkpoints", output_dirname)
         save_checkpoint(
             checkpoint_dir,
             step,

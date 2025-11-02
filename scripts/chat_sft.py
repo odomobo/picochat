@@ -17,7 +17,7 @@ import torch
 import torch.distributed as dist
 from contextlib import nullcontext
 
-from nanochat.common import compute_init, compute_cleanup, get_base_dir, get_data_dir, print0, DummyWandb, autodetect_device_type
+from nanochat.common import compute_init, compute_cleanup, get_run_dir, get_data_dir, print0, DummyWandb, autodetect_device_type
 from nanochat.checkpoint_manager import load_model
 from nanochat.checkpoint_manager import save_checkpoint
 from nanochat.engine import Engine
@@ -249,10 +249,10 @@ for step in range(num_iterations):
 
 # Save the model at the end of the run
 if master_process:
-    base_dir = get_base_dir()
+    run_dir = get_run_dir()
     depth = model.config.n_layer
     model_tag = f"d{depth}" # base the model tag on the depth of the base model
-    checkpoint_dir = os.path.join(base_dir, "chatsft_checkpoints", model_tag)
+    checkpoint_dir = os.path.join(run_dir, "chatsft_checkpoints", model_tag)
     model_config_kwargs = model.config.__dict__ # slightly naughty, abusing the simplicity of GPTConfig, TODO nicer
     save_checkpoint(
         checkpoint_dir,

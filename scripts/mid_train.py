@@ -16,7 +16,7 @@ import time
 import wandb
 import torch
 from contextlib import nullcontext
-from nanochat.common import compute_init, compute_cleanup, print0, DummyWandb, get_base_dir, get_data_dir, autodetect_device_type
+from nanochat.common import compute_init, compute_cleanup, print0, DummyWandb, get_run_dir, get_data_dir, autodetect_device_type
 from nanochat.tokenizer import get_token_bytes
 from nanochat.checkpoint_manager import save_checkpoint
 from nanochat.loss_eval import evaluate_bpb
@@ -93,7 +93,6 @@ for opt in optimizers:
         group["initial_lr"] = group["lr"] # save the initial learning so we can decay easily later
 
 # Midtraining data mixture and DataLoader
-base_dir = get_base_dir()
 data_dir = get_data_dir()
 identity_conversations_filepath = os.path.join(data_dir, "identity_conversations.jsonl")
 train_dataset = TaskMixture([
@@ -209,7 +208,7 @@ while True:
     # save checkpoint at the end of the run (only on master process)
     if master_process and last_step and not dry_run:
         output_dirname = f"d{depth}" # e.g. d12
-        checkpoint_dir = os.path.join(base_dir, "mid_checkpoints", output_dirname)
+        checkpoint_dir = os.path.join(get_run_dir(), "mid_checkpoints", output_dirname)
         save_checkpoint(
             checkpoint_dir,
             step,
