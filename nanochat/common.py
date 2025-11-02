@@ -47,16 +47,43 @@ def setup_default_logging():
 setup_default_logging()
 logger = logging.getLogger(__name__)
 
-def get_base_dir():
-    # co-locate nanochat intermediates with other cached data in ~/.cache (by default)
-    if os.environ.get("NANOCHAT_BASE_DIR"):
-        nanochat_dir = os.environ.get("NANOCHAT_BASE_DIR")
+def get_data_dir():
+    """
+    Get the shared data directory for immutable data (training shards, eval bundles).
+    This data is shared across all runs.
+    """
+    if os.environ.get("NANOCHAT_DATA_DIR"):
+        data_dir = os.environ.get("NANOCHAT_DATA_DIR")
     else:
         home_dir = os.path.expanduser("~")
         cache_dir = os.path.join(home_dir, ".cache")
-        nanochat_dir = os.path.join(cache_dir, "nanochat")
-    os.makedirs(nanochat_dir, exist_ok=True)
-    return nanochat_dir
+        data_dir = os.path.join(cache_dir, "nanochat", "data")
+    os.makedirs(data_dir, exist_ok=True)
+    return data_dir
+
+def get_run_dir():
+    """
+    Get the run-specific directory for mutable outputs (tokenizer, checkpoints, reports).
+    Each training run should have its own directory.
+    """
+    if os.environ.get("NANOCHAT_RUN_DIR"):
+        run_dir = os.environ.get("NANOCHAT_RUN_DIR")
+    elif os.environ.get("NANOCHAT_BASE_DIR"):
+        # Backward compatibility: NANOCHAT_BASE_DIR takes precedence if set
+        run_dir = os.environ.get("NANOCHAT_BASE_DIR")
+    else:
+        home_dir = os.path.expanduser("~")
+        cache_dir = os.path.join(home_dir, ".cache")
+        run_dir = os.path.join(cache_dir, "nanochat")
+    os.makedirs(run_dir, exist_ok=True)
+    return run_dir
+
+def get_base_dir():
+    """
+    Alias for get_run_dir() for backward compatibility.
+    Most code should continue using this, it now returns the run-specific directory.
+    """
+    return get_run_dir()
 
 def download_file_with_lock(url, filename):
     """

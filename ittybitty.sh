@@ -33,8 +33,10 @@ exit
 
 # Default intermediate artifacts directory
 export OMP_NUM_THREADS=1
-export NANOCHAT_BASE_DIR="$HOME/.cache/nanochat"
-mkdir -p $NANOCHAT_BASE_DIR
+export NANOCHAT_RUN_DIR="$HOME/.cache/nanochat"
+export NANOCHAT_DATA_DIR="$HOME/.cache/nanochat/data"
+mkdir -p $NANOCHAT_RUN_DIR
+mkdir -p $NANOCHAT_DATA_DIR
 
 # -----------------------------------------------------------------------------
 # Python venv setup with uv
@@ -90,11 +92,11 @@ python -m scripts.tok_eval
 
 # Download eval bundle for CORE metric evaluation
 EVAL_BUNDLE_URL=https://karpathy-public.s3.us-west-2.amazonaws.com/eval_bundle.zip
-if [ ! -d "$NANOCHAT_BASE_DIR/eval_bundle" ]; then
+if [ ! -d "$NANOCHAT_DATA_DIR/eval_bundle" ]; then
     curl -L -o eval_bundle.zip $EVAL_BUNDLE_URL
     unzip -q eval_bundle.zip
     rm eval_bundle.zip
-    mv eval_bundle $NANOCHAT_BASE_DIR
+    mv eval_bundle $NANOCHAT_DATA_DIR
 fi
 
 # Wait for dataset download to complete

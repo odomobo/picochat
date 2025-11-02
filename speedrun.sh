@@ -12,8 +12,10 @@
 
 # Default intermediate artifacts directory is in ~/.cache/nanochat
 export OMP_NUM_THREADS=1
-export NANOCHAT_BASE_DIR="$HOME/.cache/nanochat"
-mkdir -p $NANOCHAT_BASE_DIR
+export NANOCHAT_RUN_DIR="$HOME/.cache/nanochat"
+export NANOCHAT_DATA_DIR="$HOME/.cache/nanochat/data"
+mkdir -p $NANOCHAT_RUN_DIR
+mkdir -p $NANOCHAT_DATA_DIR
 
 # -----------------------------------------------------------------------------
 # Python venv setup with uv
@@ -75,11 +77,11 @@ python -m scripts.tok_eval
 
 # Download the eval_bundle from s3 to evaluate CORE metric during training (~162MB)
 EVAL_BUNDLE_URL=https://karpathy-public.s3.us-west-2.amazonaws.com/eval_bundle.zip
-if [ ! -d "$NANOCHAT_BASE_DIR/eval_bundle" ]; then
+if [ ! -d "$NANOCHAT_DATA_DIR/eval_bundle" ]; then
     curl -L -o eval_bundle.zip $EVAL_BUNDLE_URL
     unzip -q eval_bundle.zip
     rm eval_bundle.zip
-    mv eval_bundle $NANOCHAT_BASE_DIR
+    mv eval_bundle $NANOCHAT_DATA_DIR
 fi
 
 # The d20 model is 561M parameters.
@@ -103,7 +105,7 @@ torchrun --standalone --nproc_per_node=8 -m scripts.base_eval
 
 # download 2.3MB of synthetic identity conversations to impart a personality to nanochat
 # see dev/gen_sft_data.py for details on how this data was prepared and to get a sense of how you can easily tune it
-curl -L -o $NANOCHAT_BASE_DIR/identity_conversations.jsonl https://karpathy-public.s3.us-west-2.amazonaws.com/identity_conversations.jsonl
+curl -L -o $NANOCHAT_DATA_DIR/identity_conversations.jsonl https://karpathy-public.s3.us-west-2.amazonaws.com/identity_conversations.jsonl
 
 # run midtraining and eval the model
 torchrun --standalone --nproc_per_node=8 -m scripts.mid_train -- --run=$WANDB_RUN

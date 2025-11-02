@@ -20,7 +20,7 @@ from contextlib import nullcontext
 import pandas as pd
 import torch
 
-from nanochat.common import compute_init, compute_cleanup, print0, get_base_dir, autodetect_device_type
+from nanochat.common import compute_init, compute_cleanup, print0, get_base_dir, get_data_dir, autodetect_device_type
 from nanochat.tokenizer import HuggingFaceTokenizer
 from nanochat.checkpoint_manager import load_model
 from nanochat.core_eval import evaluate_task
@@ -35,8 +35,8 @@ def evaluate_model(model, tokenizer, device, max_per_task=-1):
     TODO: clean up this function, delete the need for all the files, for pandas dependency, etc.
     """
     # Load config and task metadata
-    base_dir = get_base_dir()
-    eval_bundle_dir = os.path.join(base_dir, "eval_bundle")
+    data_dir = get_data_dir()
+    eval_bundle_dir = os.path.join(data_dir, "eval_bundle")
     config_path = os.path.join(eval_bundle_dir, "core.yaml")
     data_base_path = os.path.join(eval_bundle_dir, "eval_data")
     eval_meta_data = os.path.join(eval_bundle_dir, "eval_meta_data.csv")
