@@ -80,6 +80,8 @@ def main():
 
     # Ask questions with defaults
     depth = get_int_input("Model depth (number of transformer layers)", default=4)
+    default_model_dim = 256
+    model_dim = get_int_input(f"Model dim (embedding dimension)", default=default_model_dim)
     device_batch_size = get_int_input("Device batch size (sequences per GPU)", default=32)
     target_param_data_ratio = get_int_input("Target param:data ratio (Chinchilla=20, -1=explicit iterations)", default=20)
     total_batch_size = get_int_input("Total batch size (tokens)", default=524288)
@@ -108,8 +110,7 @@ def main():
         print(f"  Valid device_batch_size values: {divisors}")
         sys.exit(1)
 
-    # Derive model_dim and calculate approximate model size
-    model_dim = depth * 64
+    # Calculate derived architecture values
     num_heads = max(1, (model_dim + 127) // 128)
 
     # Approximate parameter count (will be calculated precisely by base_train.py)
@@ -140,6 +141,7 @@ run = "{run_name}"  # wandb run name ("dummy" disables wandb logging)
 
 # Model architecture
 depth = {depth}
+model_dim = {model_dim}  # aspect ratio {model_dim / depth if depth != 0 else 0:.1f} (or custom)
 max_seq_len = {max_seq_len}
 
 # Optimization
@@ -154,7 +156,6 @@ target_flops = -1.0  # calculate iterations to reach target FLOPs (-1 = disabled
 target_param_data_ratio = {target_param_data_ratio}  # Chinchilla scaling (20 = 20 tokens per parameter)
 
 # Derived values (calculated from config above):
-# model_dim = depth * 64 = {model_dim}
 # num_heads = max(1, (model_dim + 127) // 128) = {num_heads}
 # tokens_per_fwdbwd = device_batch_size * max_seq_len = {tokens_per_fwdbwd:,}
 # grad_accum_steps = total_batch_size // tokens_per_fwdbwd = {grad_accum_steps}
