@@ -45,6 +45,8 @@ def evaluate_model(model, tokenizer, device, max_per_task=-1):
     tasks = config['icl_tasks']
     eval_metadata = pd.read_csv(eval_meta_data)
 
+    print0("Beginning evaluation")
+
     # Evaluate each task
     results = {}
     centered_results = {}
@@ -122,7 +124,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--hf-path', type=str, default=None, help='HuggingFace model path to evaluate')
-    parser.add_argument('--max-per-task', type=int, default=-1, help='Max examples per task to evaluate (-1 = disable)')
+    parser.add_argument('--max-per-task', type=int, default=5000, help='Max examples per task to evaluate (-1 = disable)')
     args = parser.parse_args()
 
     # distributed / precision setup
