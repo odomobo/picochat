@@ -33,8 +33,8 @@ else
     echo "Warning: .venv/bin/activate not found, skipping venv activation"
 fi
 
-# Reset the report
-python -m nanochat.report reset
+# Initialize the report (will error if already exists)
+python -m nanochat.report init
 
 # Disable debug mode
 set +x

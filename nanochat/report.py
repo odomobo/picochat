@@ -359,6 +359,21 @@ class Report:
         shutil.copy(report_file, "report.md")
         return report_file
 
+    def init(self):
+        """Initialize a new report. Errors if a report already exists."""
+        # Check if header file already exists
+        header_file = os.path.join(self.report_dir, "header.md")
+        if os.path.exists(header_file):
+            raise RuntimeError(f"Report already exists at {self.report_dir}. "
+                             f"Use 'reset' to overwrite or choose a different run directory.")
+        # Generate and write the header section with start timestamp
+        header = generate_header()
+        start_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(header_file, "w") as f:
+            f.write(header)
+            f.write(f"Run started: {start_time}\n\n---\n\n")
+        print(f"Initialized new report at {header_file}")
+
     def reset(self):
         """Reset the report."""
         # Remove section files
@@ -385,6 +400,8 @@ class Report:
 class DummyReport:
     def log(self, *args, **kwargs):
         pass
+    def init(self, *args, **kwargs):
+        pass
     def reset(self, *args, **kwargs):
         pass
 
@@ -401,9 +418,11 @@ def get_report():
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Generate or reset nanochat training reports.")
-    parser.add_argument("command", nargs="?", default="generate", choices=["generate", "reset"], help="Operation to perform (default: generate)")
+    parser.add_argument("command", nargs="?", default="generate", choices=["generate", "init", "reset"], help="Operation to perform (default: generate)")
     args = parser.parse_args()
     if args.command == "generate":
         get_report().generate()
+    elif args.command == "init":
+        get_report().init()
     elif args.command == "reset":
         get_report().reset()
