@@ -28,6 +28,9 @@
 #     - num_heads = max(1, (256 + 127) // 128) = 2
 #   This is NOT our target architecture!
 
+# we don't want this script to run on its own... for now!
+exit
+
 # Default intermediate artifacts directory
 export OMP_NUM_THREADS=1
 export NANOCHAT_BASE_DIR="$HOME/.cache/nanochat"
