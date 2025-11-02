@@ -109,7 +109,9 @@ python -m nanochat.dataset -n 240  # Downloads 240 shards for d20 model
 ## Architecture
 
 ### Training Pipeline Stages
-1. **Tokenizer Training** (rustbpe): Custom Rust BPE tokenizer with 2^16 (65536) vocab size
+1. **Tokenizer Training** (rustbpe): Custom Rust BPE tokenizer
+   - Default vocab size: 65536 (2^16) for full-scale models
+   - Tiny model vocab size: 24576 (3 × 2^13) - appropriate for experimental models <100M parameters
 2. **Base Model Pretraining**: GPT-style autoregressive language modeling on web text
 3. **Midtraining**: Teach conversation format, special tokens, tool use, multiple choice
 4. **Supervised Fine-tuning (SFT)**: Domain adaptation per-sequence
@@ -128,11 +130,13 @@ The GPT implementation uses a modern transformer with:
 - **Logits Softcapping**: 15.0 * tanh(logits / 15.0)
 
 Model size is determined by `--depth` parameter:
-- `depth=20` → 561M params (d20, ~$100 speedrun)
-- `depth=26` → ~800M params (d26, ~$300, GPT-2 grade)
-- `depth=32` → 1.9B params (d32, ~$800)
-- `model_dim = depth * 64` (aspect ratio of 64)
+- `depth=20` → 561M params (d20, ~$100 speedrun) - with vocab_size=65536
+- `depth=26` → ~800M params (d26, ~$300, GPT-2 grade) - with vocab_size=65536
+- `depth=32` → 1.9B params (d32, ~$800) - with vocab_size=65536
+- `model_dim = depth * 64` (aspect ratio of 64, now configurable)
 - `num_heads = max(1, (model_dim + 127) // 128)` (head dim of 128)
+
+For tiny experimental models (<100M params), use vocab_size=24576 (3 × 2^13) to reduce embedding overhead.
 
 ### Dual Optimizer Setup (nanochat/gpt.py:213-242)
 
@@ -369,6 +373,8 @@ Use `print0()` from nanochat.common - only prints from rank 0 in distributed tra
 ## Experimental Workflow (Pretraining Focus)
 
 **Philosophy**: This codebase is being adapted for rapid experimentation with small pretraining models. The focus is on understanding scaling laws and architecture choices at the <100M parameter scale, where instruct finetuning provides minimal value. The workflow prioritizes explicit configuration, reproducibility, and isolation of experimental runs.
+
+**Note on vocab size**: For tiny models (<100M params), use vocab_size=24576 (3 × 2^13) instead of the default 65536. This reduces embedding overhead significantly - at 24576, embeddings are ~37.5% of the size compared to 65536, making more parameters available for the transformer layers where actual learning happens.
 
 ### Three-Step Run Initialization
 

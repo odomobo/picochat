@@ -114,7 +114,7 @@ def main():
     num_heads = max(1, (model_dim + 127) // 128)
 
     # Calculate parameter counts
-    vocab_size = 65536  # 2^16, default from tok_train.py
+    vocab_size = 24576  # 3 * 2^13, appropriate for tiny models
     wte_params = vocab_size * model_dim
     lm_head_params = vocab_size * model_dim
     # Per layer: attention (4 * model_dim^2) + MLP (8 * model_dim^2) = 12 * model_dim^2
