@@ -4,6 +4,7 @@ __pycache__/
 rustbpe/target/
 dev-ignore/
 report.md
-eval_bundle/
-working/
+working/runs/
+working/data/tokenizer/
+working/data/base_data/
 wandb/
