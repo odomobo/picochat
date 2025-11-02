@@ -23,7 +23,10 @@ export OMP_NUM_THREADS=1
 mkdir -p "$NANOCHAT_DATA_DIR"
 mkdir -p "$NANOCHAT_RUN_DIR"
 
-# Activate virtual environment
+# Deactivate current venv if active, then activate the correct one
+if [ -n "$VIRTUAL_ENV" ]; then
+    deactivate
+fi
 if [ -f ".venv/bin/activate" ]; then
     source .venv/bin/activate
 else
