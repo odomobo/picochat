@@ -33,6 +33,18 @@ def get_int_input(prompt, default):
             print(f"  ERROR: Please enter a valid integer")
 
 
+def get_float_input(prompt, default):
+    """Get float input with default value."""
+    while True:
+        response = input(f"{prompt} [default: {default}]: ").strip()
+        if not response:
+            return default
+        try:
+            return float(response)
+        except ValueError:
+            print(f"  ERROR: Please enter a valid number")
+
+
 def get_string_input(prompt, default):
     """Get string input with default value."""
     response = input(f"{prompt} [default: {default}]: ").strip()
@@ -97,6 +109,13 @@ def main():
     default_model_dim = 512
     model_dim = get_int_input(f"Model dim (embedding dimension)", default=default_model_dim)
     tie_weights = get_bool_input("Tie embedding weights (wte and lm_head)? Reduces params by ~50%", default=True)
+
+    # Only ask for tied_weights_lr if tie_weights is enabled
+    if tie_weights:
+        tied_weights_lr = get_float_input("Learning rate for tied weights (standard: 0.2)", default=0.2)
+    else:
+        tied_weights_lr = 0.2  # Default value, unused when tie_weights=False
+
     device_batch_size = get_int_input("Device batch size (sequences per GPU)", default=32)
     target_param_data_ratio = get_int_input("Target param:data ratio (Chinchilla=20, -1=explicit iterations)", default=20)
     total_batch_size = get_int_input("Total batch size (tokens)", default=524288)
@@ -186,6 +205,7 @@ tie_weights = {str(tie_weights)}  # tie wte and lm_head weights (reduces params 
 # Optimization
 device_batch_size = {device_batch_size}
 total_batch_size = {total_batch_size}
+tied_weights_lr = {tied_weights_lr}  # learning rate for tied weights (when tie_weights=True)
 
 # Training horizon
 # Only one of (num_iterations, target_flops, target_param_data_ratio) will be used

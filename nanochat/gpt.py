@@ -219,30 +219,49 @@ class GPT(nn.Module):
         num_flops_per_token = 6 * (nparams - nparams_embedding) + 12 * l * h * q * t
         return num_flops_per_token
 
-    def setup_optimizers(self, unembedding_lr=0.004, embedding_lr=0.2, matrix_lr=0.02, weight_decay=0.0):
+    def setup_optimizers(self, unembedding_lr=0.004, embedding_lr=0.2, tied_weights_lr=0.2, matrix_lr=0.02, weight_decay=0.0):
         model_dim = self.config.n_embd
         ddp, rank, local_rank, world_size = get_dist_info()
-        # Separate out all parameters into 3 groups (matrix, embedding, lm_head)
+
+        # Separate out all parameters into groups
         matrix_params = list(self.transformer.h.parameters())
         embedding_params = list(self.transformer.wte.parameters())
-        lm_head_params = list(self.lm_head.parameters())
-        assert len(list(self.parameters())) == len(matrix_params) + len(embedding_params) + len(lm_head_params)
-        # Create the AdamW optimizer for the embedding and lm_head
+
         # Scale the LR for the AdamW parameters by ∝1/√dmodel (having tuned the LRs for 768 dim model)
         dmodel_lr_scale = (model_dim / 768) ** -0.5
         if rank == 0:
             print(f"Scaling the LR for the AdamW parameters ∝1/√({model_dim}/768) = {dmodel_lr_scale:.6f}")
-        adam_groups = [
-            dict(params=lm_head_params, lr=unembedding_lr * dmodel_lr_scale),
-            dict(params=embedding_params, lr=embedding_lr * dmodel_lr_scale),
-        ]
+
+        if self.config.tie_weights:
+            # When tied, only optimize wte (lm_head doesn't exist or shares weights)
+            # Use tied_weights_lr for the shared weights
+            adam_groups = [
+                dict(params=embedding_params, lr=tied_weights_lr * dmodel_lr_scale),
+            ]
+            assert len(list(self.parameters())) == len(matrix_params) + len(embedding_params)
+            if rank == 0:
+                print(f"Weight tying enabled: using tied_weights_lr={tied_weights_lr}")
+        else:
+            # Original: separate wte and lm_head
+            lm_head_params = list(self.lm_head.parameters())
+            adam_groups = [
+                dict(params=lm_head_params, lr=unembedding_lr * dmodel_lr_scale),
+                dict(params=embedding_params, lr=embedding_lr * dmodel_lr_scale),
+            ]
+            assert len(list(self.parameters())) == len(matrix_params) + len(embedding_params) + len(lm_head_params)
+            if rank == 0:
+                print(f"Weight tying disabled: using embedding_lr={embedding_lr}, unembedding_lr={unembedding_lr}")
+
+        # Create the AdamW optimizer for the embedding (and lm_head if untied)
         adamw_kwargs = dict(betas=(0.8, 0.95), eps=1e-10, weight_decay=weight_decay)
         AdamWFactory = DistAdamW if ddp else partial(torch.optim.AdamW, fused=True)
         adamw_optimizer = AdamWFactory(adam_groups, **adamw_kwargs)
+
         # Create the Muon optimizer for the linear layers
         muon_kwargs = dict(lr=matrix_lr, momentum=0.95)
         MuonFactory = DistMuon if ddp else Muon
         muon_optimizer = MuonFactory(matrix_params, **muon_kwargs)
+
         # Combine them the two optimizers into one list
         optimizers = [adamw_optimizer, muon_optimizer]
         for opt in optimizers:
