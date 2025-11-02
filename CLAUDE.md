@@ -401,14 +401,7 @@ The experimental workflow enforces upfront configuration for reproducibility:
 
 **Explicit over implicit**: Training scripts (currently `base_train.py`) require a `config.py` file in `$NANOCHAT_RUN_DIR`. This prevents accidental runs with default parameters and ensures every experiment is documented.
 
-The configuration wizard asks only essential questions:
-- `depth`: Model architecture (default: 4 for small experiments)
-- `device_batch_size`: VRAM constraint (default: 32)
-- `target_param_data_ratio`: Chinchilla scaling (default: 20)
-- `total_batch_size`: Optimization batch size (default: 524288)
-- `max_seq_len`: Context length (default: 2048)
-
-Validation is minimal but catches common errors (e.g., batch size divisibility).
+Configuration is handled by a configuration wizard, `scripts/configure.py`. It sets the configuration that will be used by the current run.
 
 ### Why Pretraining Only?
 
