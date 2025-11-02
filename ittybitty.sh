@@ -120,7 +120,7 @@ echo "  WARNING: This is NOT the target architecture (need dim=512, heads=8)"
 # Pretrain the model
 # Using depth=4 which gives model_dim=256, num_heads=2 (NOT our target 512/8!)
 # Single GPU (RTX 3090 24GB): using batch_size=48 (20.8GB VRAM, 86.7% utilization)
-python -m scripts.base_train -- \
+python -m scripts.base_train \
   --depth=4 \
   --num_iterations=954 \
   --target_param_data_ratio=-1 \
