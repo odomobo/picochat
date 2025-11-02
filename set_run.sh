@@ -65,13 +65,3 @@ if [ -f "$NANOCHAT_RUN_DIR/config.py" ]; then
     grep -E "^(run|depth|model_dim|device_batch_size|total_batch_size|max_seq_len|target_param_data_ratio) = " "$NANOCHAT_RUN_DIR/config.py" 2>/dev/null || echo "  (unable to parse config)"
     echo ""
 fi
-
-# Show checkpoint status
-if [ -f "$NANOCHAT_RUN_DIR/base.pt" ]; then
-    echo "Checkpoints found:"
-    ls -lh "$NANOCHAT_RUN_DIR"/*.pt 2>/dev/null | awk '{print "  " $9 " (" $5 ")"}'
-    echo ""
-else
-    echo "No checkpoints found yet."
-    echo ""
-fi
