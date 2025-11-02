@@ -74,7 +74,7 @@ if not os.path.exists(config_path):
         f"Configuration file not found: {config_path}\n"
         "This run has not been configured yet.\n"
         "The configuration should have been created by init_run.sh.\n"
-        "If you skipped that step, run: python -m nanochat.configure"
+        "If you skipped that step, run: python -m scripts.configure"
     )
 # Prepend config file to sys.argv so configurator.py will load it
 sys.argv.insert(1, config_path)

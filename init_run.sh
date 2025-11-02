@@ -45,7 +45,7 @@ set -x
 python -m nanochat.report init
 
 # Run configuration wizard (will error if config already exists)
-python -m nanochat.configure
+python -m scripts.configure
 
 # Disable debug mode
 set +x

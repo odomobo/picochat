@@ -5,7 +5,7 @@ Creates a config.py file in the current NANOCHAT_RUN_DIR with training parameter
 Asks interactive questions with sensible defaults and performs basic validation.
 
 Usage:
-    python -m nanochat.configure
+    python -m scripts.configure
 """
 
 import os

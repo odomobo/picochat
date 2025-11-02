@@ -384,9 +384,9 @@ The experimental workflow enforces upfront configuration for reproducibility:
    # - Sets NANOCHAT_RUN_DIR=working/runs/experiment_name
    # - Sets NANOCHAT_DATA_DIR=working/data
    # - Activates venv
-   # - Runs interactive configuration wizard
-   # - Creates config.py in run directory
    # - Initializes report (errors if already exists)
+   # - Runs interactive configuration wizard (scripts/configure.py)
+   # - Creates config.py in run directory
    ```
 
 3. **Execute training**:
