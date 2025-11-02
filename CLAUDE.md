@@ -403,6 +403,15 @@ The experimental workflow enforces upfront configuration for reproducibility:
    # - Generates report
    ```
 
+**Switching between runs**:
+```bash
+source set_run.sh experiment_name
+# - Sets environment variables to point to existing run
+# - Activates venv
+# - Shows config summary and checkpoint status
+# - Use this to switch between different experiments
+```
+
 ### Configuration Philosophy
 
 **Explicit over implicit**: Training scripts (currently `base_train.py`) require a `config.py` file in `$NANOCHAT_RUN_DIR`. This prevents accidental runs with default parameters and ensures every experiment is documented.
