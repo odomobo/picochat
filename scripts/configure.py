@@ -113,14 +113,27 @@ def main():
     # Calculate derived architecture values
     num_heads = max(1, (model_dim + 127) // 128)
 
-    # Approximate parameter count (will be calculated precisely by base_train.py)
-    # This is just for displaying to the user
+    # Calculate parameter counts
+    vocab_size = 65536  # 2^16, default from tok_train.py
+    wte_params = vocab_size * model_dim
+    lm_head_params = vocab_size * model_dim
+    # Per layer: attention (4 * model_dim^2) + MLP (8 * model_dim^2) = 12 * model_dim^2
+    transformer_params = depth * 12 * model_dim * model_dim
+    total_params = wte_params + transformer_params + lm_head_params
+
     print()
     print("Derived architecture:")
     print(f"  Depth: {depth}")
     print(f"  Model dim: {model_dim}")
     print(f"  Num heads: {num_heads}")
     print(f"  Head dim: 128")
+    print()
+    print("Parameter count:")
+    print(f"  wte (embeddings):        {wte_params:>12,} ({wte_params/1e6:>6.2f}M)")
+    print(f"  Transformer layers:      {transformer_params:>12,} ({transformer_params/1e6:>6.2f}M)")
+    print(f"  lm_head (unembedding):   {lm_head_params:>12,} ({lm_head_params/1e6:>6.2f}M)")
+    print(f"  {'─' * 50}")
+    print(f"  Total:                   {total_params:>12,} ({total_params/1e6:>6.2f}M)")
     print()
 
     # Display batch info
