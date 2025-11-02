@@ -23,15 +23,23 @@ export OMP_NUM_THREADS=1
 mkdir -p "$NANOCHAT_DATA_DIR"
 mkdir -p "$NANOCHAT_RUN_DIR"
 
+# Disable debug mode for venv operations (too noisy)
+set +x
+
 # Deactivate current venv if active, then activate the correct one
 if [ -n "$VIRTUAL_ENV" ]; then
+    echo "Deactivating current virtual environment..."
     deactivate
 fi
 if [ -f ".venv/bin/activate" ]; then
+    echo "Activating .venv virtual environment..."
     source .venv/bin/activate
 else
     echo "Warning: .venv/bin/activate not found, skipping venv activation"
 fi
+
+# Re-enable debug mode
+set -x
 
 # Initialize the report (will error if already exists)
 python -m nanochat.report init
