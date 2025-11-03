@@ -56,7 +56,8 @@ fi
 set -x
 
 # Initialize the report (will error if already exists)
-python -m nanochat.report init
+# This doesn't work currently, and actually, we don't need it
+# python -m nanochat.report init
 
 # Run configuration wizard (will error if config already exists)
 python -m scripts.configure
