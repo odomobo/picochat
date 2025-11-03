@@ -54,6 +54,20 @@ def load_checkpoint(checkpoint_dir, step, device, load_optimizer=False):
         meta_data = json.load(f)
     return model_data, optimizer_data, meta_data
 
+def _backward_compatibility(model_config_kwargs):
+    """
+    If certain settings are not present, default them to the the fallback option, to preserve backward compatibility.
+    """
+
+    if "tie_weights" not in model_config_kwargs:
+        model_config_kwargs["tie_weights"] = False
+        log0("Warning: tie_weights not found in checkpoint metadata, assuming False (old untied model)")
+
+    if "use_output_projection" not in model_config_kwargs:
+        model_config_kwargs["use_output_projection"] = False
+        log0("Warning: use_output_projection not found in checkpoint metadata, assuming False (old untied model)")
+    
+    return model_config_kwargs
 
 def build_model(checkpoint_dir, step, device, phase):
     """
@@ -67,13 +81,8 @@ def build_model(checkpoint_dir, step, device, phase):
     model_data, optimizer_data, meta_data = load_checkpoint(checkpoint_dir, step, device, load_optimizer=False)
     # Hack: fix torch compile issue, which prepends all keys with _orig_mod.
     model_data = {k.lstrip("_orig_mod."): v for k, v in model_data.items()}
-    model_config_kwargs = meta_data["model_config"]
-
-    # Backward compatibility: if tie_weights not in old checkpoints, assume False (untied)
-    if "tie_weights" not in model_config_kwargs:
-        model_config_kwargs["tie_weights"] = False
-        log0("Warning: tie_weights not found in checkpoint metadata, assuming False (old untied model)")
-
+    model_config_kwargs = _backward_compatibility(meta_data["model_config"])
+    
     log0(f"Building model with config: {model_config_kwargs}")
     model_config = GPTConfig(**model_config_kwargs)
     with torch.device("meta"):
