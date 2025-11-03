@@ -173,8 +173,9 @@ class GPT(nn.Module):
         if not self.config.tie_weights:
             torch.nn.init.zeros_(self.lm_head.weight)
         else:
-            # For tied weights, also zero-init to match lm_head behavior
-            torch.nn.init.zeros_(self.transformer.wte.weight)
+            # For tied weights, use very small init to match near-zero lm_head behavior
+            # but still break symmetry for embedding lookup
+            torch.nn.init.normal_(self.transformer.wte.weight, mean=0.0, std=0.01)
         # zero out c_proj weights in all blocks
         for block in self.transformer.h:
             torch.nn.init.zeros_(block.mlp.c_proj.weight)
