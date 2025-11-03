@@ -55,6 +55,8 @@ fi
 # Re-enable debug mode
 set -x
 
+wandb login
+
 # Initialize the report (will error if already exists)
 # This doesn't work currently, and actually, we don't need it
 # python -m nanochat.report init
