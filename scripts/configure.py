@@ -180,7 +180,7 @@ def main():
     print(f"  Num heads: {num_heads}")
     print(f"  Head dim: 128")
     print(f"  Weight tying: {'enabled' if tie_weights else 'disabled'}")
-    print(f"  Output projection: {'enabled' if tie_weights else 'disabled'}")
+    print(f"  Output projection: {'enabled' if use_output_projection else 'disabled'}")
     print()
     print("Parameter count:")
     if tie_weights:
