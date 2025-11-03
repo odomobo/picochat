@@ -112,9 +112,9 @@ def main():
 
     # Only ask for tied_weights_lr if tie_weights is enabled
     if tie_weights:
-        tied_weights_lr = get_float_input("Learning rate for tied weights (standard: 0.2)", default=0.2)
+        tied_weights_lr = get_float_input("Learning rate for tied weights (standard: 0.02)", default=0.02)
     else:
-        tied_weights_lr = 0.2  # Default value, unused when tie_weights=False
+        tied_weights_lr = 0.02  # Default value, unused when tie_weights=False
 
     # only ask for use_output_projection if tie_weights is enabled; we can use this if it's not, but it's not that useful otherwise
     if tie_weights:
