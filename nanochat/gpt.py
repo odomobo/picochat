@@ -172,7 +172,9 @@ class GPT(nn.Module):
         # zero out classifier weights (if not tied)
         if not self.config.tie_weights:
             torch.nn.init.zeros_(self.lm_head.weight)
-        # else: tied weights keep the N(0, 1.0) init from _init_weights for wte
+        else:
+            # For tied weights, also zero-init to match lm_head behavior
+            torch.nn.init.zeros_(self.transformer.wte.weight)
         # zero out c_proj weights in all blocks
         for block in self.transformer.h:
             torch.nn.init.zeros_(block.mlp.c_proj.weight)
