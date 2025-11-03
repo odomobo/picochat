@@ -80,7 +80,7 @@ def build_model(checkpoint_dir, step, device, phase):
     assert phase in ["train", "eval"], f"Invalid phase: {phase}"
     model_data, optimizer_data, meta_data = load_checkpoint(checkpoint_dir, step, device, load_optimizer=False)
     # Hack: fix torch compile issue, which prepends all keys with _orig_mod.
-    model_data = {k.lstrip("_orig_mod."): v for k, v in model_data.items()}
+    model_data = {k.removeprefix("_orig_mod."): v for k, v in model_data.items()}
     model_config_kwargs = _backward_compatibility(meta_data["model_config"])
     
     log0(f"Building model with config: {model_config_kwargs}")
