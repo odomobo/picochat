@@ -116,6 +116,12 @@ def main():
     else:
         tied_weights_lr = 0.2  # Default value, unused when tie_weights=False
 
+    # only ask for use_output_projection if tie_weights is enabled; we can use this if it's not, but it's not that useful otherwise
+    if tie_weights:
+        use_output_projection = get_bool_input("Use output projection matrix? (before tied lm_head)? Probably really useful!", default=True)
+    else:
+        use_output_projection = False
+
     device_batch_size = get_int_input("Device batch size (sequences per GPU)", default=32)
     target_param_data_ratio = get_int_input("Target param:data ratio (Chinchilla=20, -1=explicit iterations)", default=20)
     total_batch_size = get_int_input("Total batch size (tokens)", default=524288)
@@ -151,15 +157,21 @@ def main():
     vocab_size = 24576  # 3 * 2^13, appropriate for tiny models
     # Per layer: attention (4 * model_dim^2) + MLP (8 * model_dim^2) = 12 * model_dim^2
     transformer_params = depth * 12 * model_dim * model_dim
+    wte_params = vocab_size * model_dim  # Shared with lm_head
 
     if tie_weights:
-        wte_params = vocab_size * model_dim  # Shared with lm_head
         lm_head_params = 0  # Tied to wte
-        total_params = wte_params + transformer_params
     else:
-        wte_params = vocab_size * model_dim
         lm_head_params = vocab_size * model_dim
-        total_params = wte_params + transformer_params + lm_head_params
+    
+    # Account for output projection if enabled
+    if use_output_projection:
+        output_projection_params = model_dim * model_dim
+    else:
+        output_projection_params = 0
+
+    total_params = wte_params + transformer_params + lm_head_params + output_projection_params
+    
 
     print()
     print("Derived architecture:")
@@ -175,6 +187,8 @@ def main():
     else:
         print(f"  wte (embeddings):            {wte_params:>12,} ({wte_params/1e6:>6.2f}M)")
         print(f"  lm_head (unembedding):       {lm_head_params:>12,} ({lm_head_params/1e6:>6.2f}M)")
+    if use_output_projection:
+        print(f"  Output projection:           {output_projection_params:>12,} ({output_projection_params/1e3:>6.2f}K)")
     print(f"  Transformer layers:          {transformer_params:>12,} ({transformer_params/1e6:>6.2f}M)")
     print(f"  {'─' * 50}")
     print(f"  Total:                       {total_params:>12,} ({total_params/1e6:>6.2f}M)")
@@ -206,6 +220,7 @@ tie_weights = {str(tie_weights)}  # tie wte and lm_head weights (reduces params 
 device_batch_size = {device_batch_size}
 total_batch_size = {total_batch_size}
 tied_weights_lr = {tied_weights_lr}  # learning rate for tied weights (when tie_weights=True)
+use_output_projection = {use_output_projection}
 
 # Training horizon
 # Only one of (num_iterations, target_flops, target_param_data_ratio) will be used

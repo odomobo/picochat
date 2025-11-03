@@ -40,6 +40,7 @@ depth = 20 # the depth of the Transformer model to train, rest of the kwargs are
 model_dim = depth * 64 # embedding dimension
 max_seq_len = 2048 # max context length
 tie_weights = False # tie wte and lm_head weights (reduces params by ~50%, backward compatible default)
+use_output_projection = False # output projection layer to reduce the limitations of tiny language models when working with tied weights
 # Training horizon. Only one of these 3 will be used, in this order of precedence.
 num_iterations = -1 # explicit number of steps of the optimization (-1 = disable)
 target_flops = -1.0 # calculate num_iterations to reach target_flops. Useful for scaling laws experiments (-1 = disable)
@@ -127,7 +128,7 @@ print0(f"Tokens / micro-batch: {world_tokens_per_fwdbwd:,}")
 print0(f"Total batch size {total_batch_size:,} => gradient accumulation steps: {grad_accum_steps}")
 # -----------------------------------------------------------------------------
 # Initialize the Model
-model_config_kwargs = dict(sequence_len=max_seq_len, vocab_size=vocab_size, n_layer=num_layers, n_head=num_heads, n_kv_head=num_kv_heads, n_embd=model_dim, tie_weights=tie_weights)
+model_config_kwargs = dict(sequence_len=max_seq_len, vocab_size=vocab_size, n_layer=num_layers, n_head=num_heads, n_kv_head=num_kv_heads, n_embd=model_dim, tie_weights=tie_weights, use_output_projection=use_output_projection)
 with torch.device("meta"):
     model_config = GPTConfig(**model_config_kwargs)
     model = GPT(model_config)
