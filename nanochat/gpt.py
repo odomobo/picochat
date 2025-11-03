@@ -32,6 +32,7 @@ class GPTConfig:
     n_kv_head: int = 6 # number of key/value heads (MQA)
     n_embd: int = 768
     tie_weights: bool = False # tie wte and lm_head weights (reduces params by ~50%)
+    use_output_projection: bool = False # use an output projection just before lm_head
 
 
 def norm(x):
@@ -151,6 +152,11 @@ class GPT(nn.Module):
         else:
             # Original behavior: separate lm_head
             self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+
+        # Note: self.output_projection doesn't exist unless use_output_projection is enabled
+        if config.use_output_projection:
+            self.output_projection = nn.Linear(config.n_embd, config.n_embd, bias=False)
+
         # To support meta device initialization, we init the rotary embeddings here, but it's fake
         # As for rotary_seq_len, these rotary embeddings are pretty small/cheap in memory,
         # so let's just over-compute them, but assert fail if we ever reach that amount.
@@ -171,6 +177,10 @@ class GPT(nn.Module):
         for block in self.transformer.h:
             torch.nn.init.zeros_(block.mlp.c_proj.weight)
             torch.nn.init.zeros_(block.attn.c_proj.weight)
+        
+        # NEW: Don't zero out output_projection - use standard init
+        # It's initialized by self.apply(self._init_weights) above
+
         # init the rotary embeddings
         head_dim = self.config.n_embd // self.config.n_head
         cos, sin = self._precompute_rotary_embeddings(self.rotary_seq_len, head_dim)
@@ -225,6 +235,10 @@ class GPT(nn.Module):
 
         # Separate out all parameters into groups
         matrix_params = list(self.transformer.h.parameters())
+        # output_projection is a matrix parameter
+        if self.config.use_output_projection:
+            matrix_params.extend(list(self.output_projection.parameters()))
+
         embedding_params = list(self.transformer.wte.parameters())
 
         # Scale the LR for the AdamW parameters by ∝1/√dmodel (having tuned the LRs for 768 dim model)
@@ -286,6 +300,9 @@ class GPT(nn.Module):
         for block in self.transformer.h:
             x = block(x, cos_sin, kv_cache)
         x = norm(x)
+
+        if self.config.use_output_projection:
+            x = self.output_projection(x)
 
         # Forward the lm_head (compute logits)
         softcap = 15
