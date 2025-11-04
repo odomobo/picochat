@@ -24,30 +24,49 @@ BASE_URL = "https://huggingface.co/datasets/karpathy/fineweb-edu-100b-shuffle/re
 MAX_SHARD = 1822 # the last datashard is shard_01822.parquet
 index_to_filename = lambda index: f"shard_{index:05d}.parquet" # format of the filenames
 data_dir = get_data_dir()
-DATA_DIR = os.path.join(data_dir, "base_data")
-os.makedirs(DATA_DIR, exist_ok=True)
+BASE_DATA_DIR = os.path.join(data_dir, "base_data")
+os.makedirs(BASE_DATA_DIR, exist_ok=True)
 
 # -----------------------------------------------------------------------------
 # These functions are useful utilities to other modules, can/should be imported
 
-def list_parquet_files(data_dir=None):
-    """ Looks into a data dir and returns full paths to all parquet files. """
-    data_dir = DATA_DIR if data_dir is None else data_dir
+def list_parquet_files(corpus):
+    """
+    Looks into a corpus subdirectory and returns full paths to all parquet files.
+
+    Args:
+        corpus: Name of the corpus subdirectory in base_data/
+
+    Returns:
+        List of full paths to parquet files in the corpus directory
+    """
+    corpus_dir = os.path.join(BASE_DATA_DIR, corpus)
+    if not os.path.exists(corpus_dir):
+        raise ValueError(f"Corpus directory not found: {corpus_dir}")
+
     parquet_files = sorted([
-        f for f in os.listdir(data_dir)
+        f for f in os.listdir(corpus_dir)
         if f.endswith('.parquet') and not f.endswith('.tmp')
     ])
-    parquet_paths = [os.path.join(data_dir, f) for f in parquet_files]
+
+    if not parquet_files:
+        raise ValueError(f"No parquet files found in corpus directory: {corpus_dir}")
+
+    parquet_paths = [os.path.join(corpus_dir, f) for f in parquet_files]
     return parquet_paths
 
-def parquets_iter_batched(split, start=0, step=1):
+def parquets_iter_batched(split, start=0, step=1, corpus=None):
     """
     Iterate through the dataset, in batches of underlying row_groups for efficiency.
     - split can be "train" or "val". the last parquet file will be val.
     - start/step are useful for skipping rows in DDP. e.g. start=rank, step=world_size
+    - corpus: name of the corpus subdirectory in base_data/ (required)
     """
     assert split in ["train", "val"], "split must be 'train' or 'val'"
-    parquet_paths = list_parquet_files()
+    if corpus is None:
+        raise ValueError("corpus parameter is required")
+
+    parquet_paths = list_parquet_files(corpus=corpus)
     parquet_paths = parquet_paths[:-1] if split == "train" else parquet_paths[-1:]
     for filepath in parquet_paths:
         pf = pq.ParquetFile(filepath)
@@ -62,7 +81,7 @@ def download_single_file(index):
 
     # Construct the local filepath for this file and skip if it already exists
     filename = index_to_filename(index)
-    filepath = os.path.join(DATA_DIR, filename)
+    filepath = os.path.join(BASE_DATA_DIR, filename)
     if os.path.exists(filepath):
         print(f"Skipping {filepath} (already exists)")
         return True
@@ -118,11 +137,11 @@ if __name__ == "__main__":
     num = MAX_SHARD + 1 if args.num_files == -1 else min(args.num_files, MAX_SHARD + 1)
     ids_to_download = list(range(num))
     print(f"Downloading {len(ids_to_download)} shards using {args.num_workers} workers...")
-    print(f"Target directory: {DATA_DIR}")
+    print(f"Target directory: {BASE_DATA_DIR}")
     print()
     with Pool(processes=args.num_workers) as pool:
         results = pool.map(download_single_file, ids_to_download)
 
     # Report results
     successful = sum(1 for success in results if success)
-    print(f"Done! Downloaded: {successful}/{len(ids_to_download)} shards to {DATA_DIR}")
+    print(f"Done! Downloaded: {successful}/{len(ids_to_download)} shards to {BASE_DATA_DIR}")

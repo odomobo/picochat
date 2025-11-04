@@ -33,6 +33,8 @@ print_banner()
 # -----------------------------------------------------------------------------
 # User settings
 run = "dummy" # wandb run name default ("dummy" is special - we won't log to wandb)
+# Data
+corpus_name = "" # name of corpus subdirectory in base_data/ (REQUIRED, set by config wizard)
 # Runtime
 device_type = "" # cuda|cpu|mps (empty => autodetect good device type default, in order: CUDA > MPS > CPU)
 # Model architecture
@@ -167,10 +169,10 @@ optimizers = model.setup_optimizers(unembedding_lr=unembedding_lr, embedding_lr=
 adamw_optimizer, muon_optimizer = optimizers
 
 # Initialize the DataLoaders for train/val
-data_dir = get_data_dir()
-tokens_dir = os.path.join(data_dir, "tokenized_data")
-train_loader = tokenizing_distributed_data_loader(device_batch_size, max_seq_len, split="train", device=device)
-build_val_loader = lambda: tokenizing_distributed_data_loader(device_batch_size, max_seq_len, split="val", device=device)
+if not corpus_name:
+    raise ValueError("corpus_name is required. It should be set in the config.py file by the configuration wizard.")
+train_loader = tokenizing_distributed_data_loader(device_batch_size, max_seq_len, split="train", corpus=corpus_name, device=device)
+build_val_loader = lambda: tokenizing_distributed_data_loader(device_batch_size, max_seq_len, split="val", corpus=corpus_name, device=device)
 x, y = next(train_loader) # kick off load of the very first batch of data
 
 # -----------------------------------------------------------------------------
@@ -346,6 +348,7 @@ from nanochat.report import get_report
 get_report().log(section="Base model training", data=[
     user_config, # CLI args
     { # stats about the training setup
+        "Corpus": corpus_name,
         "Number of parameters": num_params,
         "Number of FLOPs per token": f"{num_flops_per_token:e}",
         "Calculated number of iterations": num_iterations,

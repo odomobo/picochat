@@ -104,6 +104,60 @@ def main():
         run_name = get_string_input("Run name (for wandb logging)", default="dummy")
     print()
 
+    # Corpus selection - scan base_data directory for available corpora
+    data_dir = os.environ.get("NANOCHAT_DATA_DIR")
+    if not data_dir:
+        print("ERROR: NANOCHAT_DATA_DIR environment variable is not set")
+        print("Please run: source init_run.sh <run_name>")
+        sys.exit(1)
+
+    base_data_dir = os.path.join(data_dir, "base_data")
+    if not os.path.exists(base_data_dir):
+        print(f"ERROR: Base data directory not found: {base_data_dir}")
+        print("Please download or organize pretraining data first.")
+        sys.exit(1)
+
+    # Find all subdirectories containing .parquet files
+    available_corpora = []
+    for item in os.listdir(base_data_dir):
+        corpus_path = os.path.join(base_data_dir, item)
+        if os.path.isdir(corpus_path):
+            # Check if this directory contains any .parquet files
+            parquet_files = [f for f in os.listdir(corpus_path) if f.endswith('.parquet')]
+            if parquet_files:
+                available_corpora.append((item, len(parquet_files)))
+
+    if not available_corpora:
+        print(f"ERROR: No corpora found in {base_data_dir}")
+        print("Expected structure: {base_data_dir}/{{corpus_name}}/*.parquet")
+        print("Please organize your pretraining data into corpus subdirectories.")
+        sys.exit(1)
+
+    # Present corpus options
+    print("Available pretraining corpora:")
+    for idx, (corpus_name, num_shards) in enumerate(available_corpora, 1):
+        print(f"  {idx}. {corpus_name} ({num_shards} shards)")
+    print()
+
+    # Select corpus
+    if len(available_corpora) == 1:
+        corpus_name = available_corpora[0][0]
+        print(f"Auto-selected corpus: {corpus_name}")
+    else:
+        while True:
+            response = input(f"Select corpus [1-{len(available_corpora)}]: ").strip()
+            try:
+                selection = int(response)
+                if 1 <= selection <= len(available_corpora):
+                    corpus_name = available_corpora[selection - 1][0]
+                    print(f"Selected corpus: {corpus_name}")
+                    break
+                else:
+                    print(f"  ERROR: Please enter a number between 1 and {len(available_corpora)}")
+            except ValueError:
+                print(f"  ERROR: Please enter a valid number")
+    print()
+
     # Ask questions with defaults
     depth = get_int_input("Model depth (number of transformer layers)", default=4)
     default_model_dim = 512
@@ -210,6 +264,9 @@ def main():
 
 # Run identification
 run = "{run_name}"  # wandb run name ("dummy" disables wandb logging)
+
+# Data
+corpus_name = "{corpus_name}"  # pretraining corpus subdirectory in base_data/
 
 # Model architecture
 depth = {depth}
