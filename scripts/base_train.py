@@ -104,6 +104,11 @@ get_max_memory = torch.cuda.max_memory_allocated if device_type == "cuda" else l
 use_dummy_wandb = run == "dummy" or not master_process
 wandb_run = DummyWandb() if use_dummy_wandb else wandb.init(project="nanochat", name=run, config=user_config)
 
+# Configure wandb to use total_training_flops as primary x-axis for all metrics
+if not use_dummy_wandb:
+    wandb_run.define_metric("total_training_flops")
+    wandb_run.define_metric("*", step_metric="total_training_flops")
+
 # Tokenizer will be useful for evaluation, also we need the vocab size
 tokenizer = get_tokenizer()
 token_bytes = get_token_bytes(device=device)
