@@ -17,18 +17,11 @@ from multiprocessing import Pool
 from nanochat.common import get_data_dir
 
 # -----------------------------------------------------------------------------
-# The specifics of the current pretraining dataset
+# General corpus-agnostic utilities
 
-# The URL on the internet where the data is hosted and downloaded from on demand
-BASE_URL = "https://huggingface.co/datasets/karpathy/fineweb-edu-100b-shuffle/resolve/main"
-MAX_SHARD = 1822 # the last datashard is shard_01822.parquet
-index_to_filename = lambda index: f"shard_{index:05d}.parquet" # format of the filenames
 data_dir = get_data_dir()
 BASE_DATA_DIR = os.path.join(data_dir, "base_data")
 os.makedirs(BASE_DATA_DIR, exist_ok=True)
-
-# -----------------------------------------------------------------------------
-# These functions are useful utilities to other modules, can/should be imported
 
 def list_parquet_files(corpus):
     """
@@ -76,22 +69,28 @@ def parquets_iter_batched(split, start=0, step=1, corpus=None):
             yield texts
 
 # -----------------------------------------------------------------------------
-def download_single_file(index):
-    """ Downloads a single file index, with some backoff """
+# Download utilities (corpus-agnostic)
 
-    # Construct the local filepath for this file and skip if it already exists
-    filename = index_to_filename(index)
-    filepath = os.path.join(BASE_DATA_DIR, filename)
+def download_file_with_retry(url, filepath, max_attempts=5):
+    """
+    Download a file from a URL to a local filepath with retry logic.
+
+    Args:
+        url: Remote URL to download from
+        filepath: Local path to save the file
+        max_attempts: Maximum number of download attempts
+
+    Returns:
+        True if successful, False otherwise
+    """
     if os.path.exists(filepath):
         print(f"Skipping {filepath} (already exists)")
         return True
 
-    # Construct the remote URL for this file
-    url = f"{BASE_URL}/{filename}"
+    filename = os.path.basename(filepath)
     print(f"Downloading {filename}...")
 
     # Download with retries
-    max_attempts = 5
     for attempt in range(1, max_attempts + 1):
         try:
             response = requests.get(url, stream=True, timeout=30)
@@ -110,7 +109,7 @@ def download_single_file(index):
         except (requests.RequestException, IOError) as e:
             print(f"Attempt {attempt}/{max_attempts} failed for {filename}: {e}")
             # Clean up any partial files
-            for path in [filepath + f".tmp", filepath]:
+            for path in [temp_path, filepath]:
                 if os.path.exists(path):
                     try:
                         os.remove(path)
@@ -129,19 +128,41 @@ def download_single_file(index):
 
 
 if __name__ == "__main__":
+    # FineWeb-Edu specific configuration
+    CORPUS_NAME = "fineweb_edu"
+    BASE_URL = "https://huggingface.co/datasets/karpathy/fineweb-edu-100b-shuffle/resolve/main"
+    MAX_SHARD = 1822  # the last datashard is shard_01822.parquet
+    index_to_filename = lambda index: f"shard_{index:05d}.parquet"
+
+    # Set up corpus directory
+    corpus_dir = os.path.join(BASE_DATA_DIR, CORPUS_NAME)
+    os.makedirs(corpus_dir, exist_ok=True)
+
+    # Parse arguments
     parser = argparse.ArgumentParser(description="Download FineWeb-Edu 100BT dataset shards")
-    parser.add_argument("-n", "--num-files", type=int, default=-1, help="Number of shards to download (default: -1), -1 = disable")
+    parser.add_argument("-n", "--num-files", type=int, default=-1, help="Number of shards to download (default: -1 = all)")
     parser.add_argument("-w", "--num-workers", type=int, default=4, help="Number of parallel download workers (default: 4)")
     args = parser.parse_args()
 
+    # Determine which shards to download
     num = MAX_SHARD + 1 if args.num_files == -1 else min(args.num_files, MAX_SHARD + 1)
-    ids_to_download = list(range(num))
-    print(f"Downloading {len(ids_to_download)} shards using {args.num_workers} workers...")
-    print(f"Target directory: {BASE_DATA_DIR}")
+
+    # Create download tasks
+    def download_shard(index):
+        filename = index_to_filename(index)
+        url = f"{BASE_URL}/{filename}"
+        filepath = os.path.join(corpus_dir, filename)
+        return download_file_with_retry(url, filepath)
+
+    # Download
+    print(f"Downloading {num} shards using {args.num_workers} workers...")
+    print(f"Target directory: {corpus_dir}")
+    print(f"Corpus name: {CORPUS_NAME}")
     print()
+
     with Pool(processes=args.num_workers) as pool:
-        results = pool.map(download_single_file, ids_to_download)
+        results = pool.map(download_shard, range(num))
 
     # Report results
     successful = sum(1 for success in results if success)
-    print(f"Done! Downloaded: {successful}/{len(ids_to_download)} shards to {BASE_DATA_DIR}")
+    print(f"Done! Downloaded: {successful}/{num} shards to {corpus_dir}")
