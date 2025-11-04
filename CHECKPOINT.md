@@ -1,3 +1,5 @@
+Next step is to get training working with different corpora, specifically TinyStories.
+
 I got tied weights working well with an output projection layer (hidden_dim x hidden_dim) that sits right before lm_head, and with reducing wte training rate to somewhere between 0.02 and 0.004 . However, training is basically identical to when the weights are untied, both in terms of training time and model performance.
 
 However, this is actually beneficial for the next test I want to do! I want to try to implement next-token confidence with this architecture:
