@@ -12,13 +12,6 @@ Status   : PENDING
     Use this to capture all of my findings. This should only be the results of actual findings I make. Currently the only real finding is about weight tying and requiring an output linear projection to allow for effective training.
 ----------
 
----------- TICKET 021
-Title    : Claude learn - tickets
-Status   : PENDING
-    Claude needs to learn how to process tickets, and then save that into its CLAUDE.md file. Here's the process:
-    - when given a ticket, it first needs to try to understand it, and to provide its understanding of the ticket to the user, along with any questions it has. It gives its implementation plan to the best of its abilities. Then it and the user go back and forth, and once the user agrees on the implementation plan, then claude actually implements it.
-----------
-
 ---------- TICKET 002
 Title    : Fix wandb logging
 Status   : PENDING
