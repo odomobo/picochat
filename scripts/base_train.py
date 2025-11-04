@@ -104,10 +104,10 @@ get_max_memory = torch.cuda.max_memory_allocated if device_type == "cuda" else l
 use_dummy_wandb = run == "dummy" or not master_process
 wandb_run = DummyWandb() if use_dummy_wandb else wandb.init(project="nanochat", name=run, config=user_config)
 
-# Configure wandb to use total_training_flops as primary x-axis for all metrics
+# Configure wandb to use total_training_petaflops as primary x-axis for all metrics
 if not use_dummy_wandb:
-    wandb_run.define_metric("total_training_flops")
-    wandb_run.define_metric("*", step_metric="total_training_flops")
+    wandb_run.define_metric("total_training_petaflops")
+    wandb_run.define_metric("*", step_metric="total_training_petaflops")
 
 # Tokenizer will be useful for evaluation, also we need the vocab size
 tokenizer = get_tokenizer()
@@ -223,7 +223,7 @@ for step in range(num_iterations + 1):
         if val_bpb < min_val_bpb:
             min_val_bpb = val_bpb
         wandb_run.log({
-            "total_training_flops": flops_so_far,
+            "total_training_petaflops": flops_so_far / 1e15,
             "val/bpb": val_bpb,
         })
         model.train()
@@ -237,7 +237,7 @@ for step in range(num_iterations + 1):
             results = evaluate_model(orig_model, tokenizer, device, max_per_task=core_metric_max_per_task)
         print0(f"Step {step:05d} | CORE metric: {results['core_metric']:.4f}")
         wandb_run.log({
-            "total_training_flops": flops_so_far,
+            "total_training_petaflops": flops_so_far / 1e15,
             "core_metric": results["core_metric"],
             "centered_results": results["centered_results"],
         })
@@ -331,6 +331,7 @@ for step in range(num_iterations + 1):
     # log _every_ step
     if step % 1 == 0:
         wandb_run.log({
+            "total_training_petaflops": flops_so_far / 1e15,
             "step": step,
             "total_training_flops": flops_so_far,
             "total_training_time": total_training_time,
