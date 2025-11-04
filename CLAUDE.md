@@ -8,6 +8,17 @@ nanochat is a full-stack implementation of an LLM like ChatGPT in a single, clea
 
 **Philosophy**: nanochat is not an exhaustively configurable LLM "framework" - it's a cohesive, minimal, readable, hackable, maximally-forkable "strong baseline" codebase. Avoid adding giant configuration objects, model factories, or complex if-then-else logic.
 
+## Ticket Workflow
+
+When processing tickets:
+
+1. **Present understanding and implementation plan** - Explain what you think the ticket is asking for and how you would implement it
+2. **Ask questions based on uncertainty** - Only ask questions when genuinely uncertain about requirements. Skip this if you have confident understanding.
+3. **Iterate if needed** - Refine the plan through discussion, but only if necessary. A solid upfront plan can skip back-and-forth.
+4. **Get authorization** - Wait for explicit user approval before implementing. Never execute without authorization.
+
+**Note**: The "status" field in tickets is irrelevant to processing. This workflow applies to all types of tickets (features, bugs, refactoring, research, etc.).
+
 ## Build & Development Commands
 
 ### Environment Setup
