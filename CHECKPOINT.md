@@ -53,9 +53,7 @@ Then I want to play around with those.
 
 Then, I think I need to create a "findings" document, which stays clean.
 
-Then, I think I want to go back to practicality. Since I want to be able to perform multiple runs, I need some kind of a way to queue runs, and another script that waits for new runs to be queued, and finally some way to manage which runs are queued. Some way to manage this anyhow.
-
-Then, I need to create some script that keeps my computer awake for as long as it sees the GPU being taxed? So it'll check periodically, and if it's above maybe 10%, it'll keep it awake. Then I can queue runs, and the computer will stay awake until the runs are finished.
+Instead of "queueing" runs, what I'll do is init a bunch of different runs which I want to queue, then I'll write a one-off bash script which will set/train/validate on each one. Then I fire and forget. Maybe each one sets the terminal window name or something, so I can see which step it's on.
 
 
 I was interested in playing around with model growing, but it has a speedup of maybe 5x, which is kinda piddly. It just means there's a linear speedup for some things, but that's no good when the underlying architecture has problems. So instead of this, let's focus on confidence!!!!
