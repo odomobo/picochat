@@ -1,6 +1,6 @@
 ---------- TICKET 001
 Title    : TinyStories Corpus
-Status   : IN PROGRESS
+Status   : TESTING
     Need to be able to select corpus in config wizard.
     No backwards compat required.
     Need to verify this actually works.
@@ -14,7 +14,7 @@ Status   : PENDING
 
 ---------- TICKET 002
 Title    : Fix wandb logging
-Status   : PENDING
+Status   : TESTING
     All data points should be consistent and scaled by estimated FLOPs so far. This will allow for apples-to-apples comparisons with respect to computational cost (and roughly correlated with time).
 ----------
 
