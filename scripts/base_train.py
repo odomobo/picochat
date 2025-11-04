@@ -325,8 +325,8 @@ for step in range(num_iterations + 1):
     flops_per_sec = num_flops_per_token * total_batch_size / dt
     promised_flops_per_sec_h100 = 989e12 * ddp_world_size # bfloat16 H100 SXM and without 2:4 sparsity
     mfu = 100 * flops_per_sec / promised_flops_per_sec_h100 # in %
-    if step > 10:
-        total_training_time += dt # only count the time after the first 10 steps
+    if step > 1:
+        total_training_time += dt # only count the time after the first step
     print0(f"step {step:05d}/{num_iterations:05d} ({pct_done:.2f}%) | loss: {debiased_smooth_loss:.6f} | lrm: {lrm:.2f} | dt: {dt * 1000:.2f}ms | tok/sec: {tok_per_sec:,} | mfu: {mfu:.2f} | total time: {total_training_time/60:.2f}m")
     # log _every_ step
     if step % 1 == 0:
