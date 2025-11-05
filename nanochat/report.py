@@ -193,17 +193,11 @@ def slugify(text):
 
 # the expected files and their order
 EXPECTED_FILES = [
-    "tokenizer-training.md",
-    "tokenizer-evaluation.md",
+    #"tokenizer-training.md",
+    #"tokenizer-evaluation.md",
     "base-model-training.md",
     "base-model-loss.md",
     "base-model-evaluation.md",
-    "midtraining.md",
-    "chat-evaluation-mid.md",
-    "chat-sft.md",
-    "chat-evaluation-sft.md",
-    "chat-rl.md",
-    "chat-evaluation-rl.md",
 ]
 # the metrics we're currently interested in
 chat_metrics = ["ARC-Easy", "ARC-Challenge", "MMLU", "GSM8K", "HumanEval", "ChatCORE"]
@@ -303,12 +297,6 @@ class Report:
                 # extract the most important metrics from the sections
                 if file_name == "base-model-evaluation.md":
                     final_metrics["base"] = extract(section, "CORE")
-                if file_name == "chat-evaluation-mid.md":
-                    final_metrics["mid"] = extract(section, chat_metrics)
-                if file_name == "chat-evaluation-sft.md":
-                    final_metrics["sft"] = extract(section, chat_metrics)
-                if file_name == "chat-evaluation-rl.md":
-                    final_metrics["rl"] = extract(section, "GSM8K") # RL only evals GSM8K
                 # append this section of the report
                 out_file.write(section)
                 out_file.write("\n")
