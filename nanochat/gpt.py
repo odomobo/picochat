@@ -228,7 +228,13 @@ class GPT(nn.Module):
     def estimate_flops(self):
         """ Return the estimated FLOPs per token for the model. Ref: https://arxiv.org/abs/2204.02311 """
         nparams = sum(p.numel() for p in self.parameters())
-        return estimate_flops_per_token(self.config, nparams)
+        # Calculate effective parameters (tied weights are used twice)
+        if self.config.tie_weights:
+            nparams_embedding = self.transformer.wte.weight.numel()
+            effective_params = nparams + nparams_embedding
+        else:
+            effective_params = nparams
+        return estimate_flops_per_token(self.config, effective_params)
 
     def setup_optimizers(self, unembedding_lr=0.004, embedding_lr=0.2, tied_weights_lr=0.2, matrix_lr=0.02, weight_decay=0.0):
         model_dim = self.config.n_embd

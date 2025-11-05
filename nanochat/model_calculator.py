@@ -92,7 +92,7 @@ def calculate_model_size(config):
     }
 
 
-def estimate_flops_per_token(config, total_params):
+def estimate_flops_per_token(config, effective_params):
     """
     Estimate FLOPs per token for the model.
 
@@ -100,7 +100,7 @@ def estimate_flops_per_token(config, total_params):
 
     Args:
         config: GPTConfig object
-        total_params: Total parameter count
+        effective_params: Effective parameter count (accounts for tied weights)
 
     Returns:
         FLOPs per token (float)
@@ -111,7 +111,7 @@ def estimate_flops_per_token(config, total_params):
     q = config.n_embd // config.n_head
     t = config.sequence_len
 
-    num_flops_per_token = 6 * (total_params - nparams_embedding) + 12 * l * h * q * t
+    num_flops_per_token = 6 * (effective_params - nparams_embedding) + 12 * l * h * q * t
     return num_flops_per_token
 
 
@@ -133,12 +133,19 @@ def estimate_training_time(config, total_params, target_param_data_ratio, total_
     mfu = 0.40  # Model FLOPs Utilization (40%)
     overhead_minutes = 5  # Fixed overhead per run
 
+    # Calculate effective parameters (tied weights are used twice)
+    nparams_embedding = config.vocab_size * config.n_embd
+    if config.tie_weights:
+        effective_params = total_params + nparams_embedding
+    else:
+        effective_params = total_params
+
     # Calculate training parameters
     target_tokens = total_params * target_param_data_ratio
     num_iterations = int(target_tokens // total_batch_size)
 
     # Calculate FLOPs per token
-    num_flops_per_token = estimate_flops_per_token(config, total_params)
+    num_flops_per_token = estimate_flops_per_token(config, effective_params)
 
     # Total FLOPs for training
     total_flops = num_flops_per_token * target_tokens
