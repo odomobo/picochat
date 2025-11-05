@@ -66,6 +66,12 @@ def calculate_model_size(config):
     # Total parameters
     total_params = embedding_params + unembedding_params + output_projection_params + transformer_params
 
+    # Effective parameters (accounts for tied weights being used twice)
+    if config.tie_weights:
+        effective_params = total_params + embedding_params
+    else:
+        effective_params = total_params
+
     return {
         'depth': depth,
         'model_dim': model_dim,
@@ -82,6 +88,7 @@ def calculate_model_size(config):
         'transformer_params': transformer_params,
         'params_per_layer': params_per_layer,
         'total_params': total_params,
+        'effective_params': effective_params,
     }
 
 

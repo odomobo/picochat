@@ -115,6 +115,8 @@ def main():
     print(f"    (Per layer:                {model_info['params_per_layer']:>12,} ({model_info['params_per_layer']/1e6:>6.2f}M))")
     print(f"  {'─' * 50}")
     print(f"  Total:                       {model_info['total_params']:>12,} ({model_info['total_params']/1e6:>6.2f}M)")
+    if model_info['tie_weights']:
+        print(f"  Effective (tied wte x2):     {model_info['effective_params']:>12,} ({model_info['effective_params']/1e6:>6.2f}M)")
     print()
 
     print("=" * 80)

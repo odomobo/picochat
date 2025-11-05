@@ -252,6 +252,8 @@ def main():
     print(f"  Transformer layers:          {transformer_params:>12,} ({transformer_params/1e6:>6.2f}M)")
     print(f"  {'─' * 50}")
     print(f"  Total:                       {total_params:>12,} ({total_params/1e6:>6.2f}M)")
+    if tie_weights:
+        print(f"  Effective (tied wte x2):     {model_info['effective_params']:>12,} ({model_info['effective_params']/1e6:>6.2f}M)")
     print()
 
     # Display batch info
