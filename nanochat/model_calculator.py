@@ -139,9 +139,7 @@ def estimate_training_time(config, total_params, target_param_data_ratio, total_
 
     # Calculate training time
     effective_flops = rtx3090_peak_flops * mfu
-    training_time_seconds = total_flops / effective_flops
-    training_time_minutes = training_time_seconds / 60 + overhead_minutes
-    training_time_hours = training_time_minutes / 60
+    training_time_seconds = total_flops / effective_flops + (overhead_minutes * 60)
 
     # Calculate data requirements
     # Assuming 4.8 chars/token compression and 250M chars per shard
@@ -157,8 +155,6 @@ def estimate_training_time(config, total_params, target_param_data_ratio, total_
         'total_flops': total_flops,
         'total_petaflops': total_petaflops,
         'training_time_seconds': training_time_seconds,
-        'training_time_minutes': training_time_minutes,
-        'training_time_hours': training_time_hours,
         'num_shards_needed': num_shards_needed,
         'mfu': mfu,
         'overhead_minutes': overhead_minutes,
