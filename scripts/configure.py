@@ -77,7 +77,7 @@ def main():
     run_dir = os.environ.get("NANOCHAT_RUN_DIR")
     if not run_dir:
         print("ERROR: NANOCHAT_RUN_DIR environment variable is not set")
-        print("Please run: source init_run.sh <run_name>")
+        print("Please run: source scripts/run_init.sh <run_name>")
         sys.exit(1)
 
     # Check if config.py already exists
@@ -111,7 +111,7 @@ def main():
     data_dir = os.environ.get("NANOCHAT_DATA_DIR")
     if not data_dir:
         print("ERROR: NANOCHAT_DATA_DIR environment variable is not set")
-        print("Please run: source init_run.sh <run_name>")
+        print("Please run: source scripts/run_init.sh <run_name>")
         sys.exit(1)
 
     base_data_dir = os.path.join(data_dir, "base_data")

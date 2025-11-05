@@ -3,27 +3,27 @@
 # Usage: bash start_run.sh
 #
 # Prerequisites:
-# - Must have run: source init_run.sh <run_name>
+# - Must have run: source scripts/run_init.sh <run_name>
 # - NANOCHAT_RUN_DIR and NANOCHAT_DATA_DIR must be set
 # - Configuration must exist at $NANOCHAT_RUN_DIR/config.py
 
 # Verify environment is set up
 if [ -z "$NANOCHAT_RUN_DIR" ]; then
     echo "ERROR: NANOCHAT_RUN_DIR is not set"
-    echo "Please run: source init_run.sh <run_name>"
+    echo "Please run: source scripts/run_init.sh <run_name>"
     exit 1
 fi
 
 if [ -z "$NANOCHAT_DATA_DIR" ]; then
     echo "ERROR: NANOCHAT_DATA_DIR is not set"
-    echo "Please run: source init_run.sh <run_name>"
+    echo "Please run: source scripts/run_init.sh <run_name>"
     exit 1
 fi
 
 # Verify configuration exists
 if [ ! -f "$NANOCHAT_RUN_DIR/config.py" ]; then
     echo "ERROR: Configuration file not found: $NANOCHAT_RUN_DIR/config.py"
-    echo "Please run: source init_run.sh <run_name>"
+    echo "Please run: source scripts/run_init.sh <run_name>"
     exit 1
 fi
 

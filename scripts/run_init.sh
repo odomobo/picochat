@@ -2,6 +2,12 @@
 # Initialize a nanochat training run
 # Usage: source init_run.sh <run_name>
 
+# Check if script is being sourced (not executed)
+if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+    echo "Error: You must source this script: $ source scripts/run_init.sh <run_name>"
+    exit 1
+fi
+
 if [ -z "$1" ]; then
     echo "Error: No run name provided"
     echo "Usage: source init_run.sh <run_name>"

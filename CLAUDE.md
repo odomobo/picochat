@@ -423,7 +423,7 @@ Directory structure has been split for running multiple experiments:
 - `NANOCHAT_DATA_DIR`: Shared immutable data (training shards, tokenizer, eval bundles)
 - `NANOCHAT_RUN_DIR`: Run-specific outputs (checkpoints, reports, configs)
 
-Set via `init_run.sh` or manually:
+Set via `scripts/run_init.sh` or manually:
 ```bash
 export NANOCHAT_DATA_DIR="$PWD/working/data"
 export NANOCHAT_RUN_DIR="$PWD/working/runs/my_experiment"
@@ -448,7 +448,7 @@ The experimental workflow enforces upfront configuration for reproducibility:
 
 2. **Per-experiment initialization**:
    ```bash
-   source init_run.sh experiment_name
+   source scripts/run_init.sh experiment_name
    # - Sets NANOCHAT_RUN_DIR=working/runs/experiment_name
    # - Sets NANOCHAT_DATA_DIR=working/data
    # - Activates venv
@@ -467,7 +467,7 @@ The experimental workflow enforces upfront configuration for reproducibility:
 
 **Switching between runs**:
 ```bash
-source set_run.sh experiment_name
+source scripts/run_set.sh experiment_name
 # - Sets environment variables to point to existing run
 # - Activates venv
 # - Shows config summary and checkpoint status
