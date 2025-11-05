@@ -83,6 +83,7 @@ def main():
     training_info = estimate_training_time(
         config=config,
         effective_params=model_info['effective_params'],
+        transformer_params=model_info['transformer_params'],
         target_param_data_ratio=target_param_data_ratio,
         total_batch_size=total_batch_size
     )
@@ -135,16 +136,16 @@ def main():
     print(f"  Total PetaFLOPs:             {training_info['total_petaflops']:>12.2f}")
     print()
     # Calculate hours and minutes for display
-    training_time_minutes = training_info['training_time_seconds'] / 60
-    training_time_hours = training_time_minutes / 60
+    total_minutes = int(training_info['training_time_seconds'] / 60)
+    hours = total_minutes // 60
+    minutes = total_minutes % 60
 
     print("Hardware & timing:")
     print(f"  Hardware:                    RTX 3090")
     print(f"  Peak performance:            {training_info['rtx3090_peak_tflops']:.1f} TFLOPS (BF16)")
     print(f"  Model FLOPs Utilization:     {training_info['mfu']*100:.1f}%")
     print(f"  Overhead:                    {training_info['overhead_minutes']} minutes")
-    print(f"  Estimated training time:     {training_time_hours:>12.2f} hours")
-    print(f"                               {training_time_minutes:>12.1f} minutes")
+    print(f"  Estimated training time:     {hours}:{minutes:02d}")
     print()
     print("=" * 80)
     print()

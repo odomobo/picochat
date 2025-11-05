@@ -268,16 +268,19 @@ def main():
     training_info = estimate_training_time(
         config=config,
         effective_params=model_info['effective_params'],
+        transformer_params=model_info['transformer_params'],
         target_param_data_ratio=target_param_data_ratio,
         total_batch_size=total_batch_size
     )
-    training_time_hours = training_info['training_time_seconds'] / 3600
+    total_minutes = int(training_info['training_time_seconds'] / 60)
+    hours = total_minutes // 60
+    minutes = total_minutes % 60
     print("Training time estimate (RTX 3090):")
     print(f"  Tokens:Params ratio:         {target_param_data_ratio}:1")
     print(f"  Target tokens:               {training_info['target_tokens']:>12,} ({training_info['target_tokens']/1e9:>6.2f}B)")
     print(f"  Num iterations:              {training_info['num_iterations']:>12,}")
     print(f"  Total PetaFLOPs:             {training_info['total_petaflops']:>12.2f}")
-    print(f"  Estimated training time:     {training_time_hours:>12.2f} hours")
+    print(f"  Estimated training time:     {hours}:{minutes:02d}")
     print()
 
     # Generate config file content
