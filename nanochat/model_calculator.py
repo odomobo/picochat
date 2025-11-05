@@ -131,7 +131,7 @@ def estimate_training_time(config, effective_params, transformer_params, target_
     """
     # RTX 3090 specs (Ampere architecture) - hardcoded
     rtx3090_peak_flops = 71e12  # BF16 Tensor Core peak: ~71 TFLOPS
-    mfu = 0.40  # Model FLOPs Utilization (40%)
+    mfu = 0.50  # Model FLOPs Utilization (50%)
     overhead_minutes = 5  # Fixed overhead per run
 
     # Calculate training parameters (Chinchilla scaling based on transformer params only)
