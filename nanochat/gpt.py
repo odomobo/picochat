@@ -22,6 +22,7 @@ import torch.nn.functional as F
 from nanochat.common import get_dist_info, print0
 from nanochat.muon import Muon, DistMuon
 from nanochat.adamw import DistAdamW
+from nanochat.model_calculator import estimate_flops_per_token
 
 @dataclass
 class GPTConfig:
@@ -227,10 +228,7 @@ class GPT(nn.Module):
     def estimate_flops(self):
         """ Return the estimated FLOPs per token for the model. Ref: https://arxiv.org/abs/2204.02311 """
         nparams = sum(p.numel() for p in self.parameters())
-        nparams_embedding = self.transformer.wte.weight.numel()
-        l, h, q, t = self.config.n_layer, self.config.n_head, self.config.n_embd // self.config.n_head, self.config.sequence_len
-        num_flops_per_token = 6 * (nparams - nparams_embedding) + 12 * l * h * q * t
-        return num_flops_per_token
+        return estimate_flops_per_token(self.config, nparams)
 
     def setup_optimizers(self, unembedding_lr=0.004, embedding_lr=0.2, tied_weights_lr=0.2, matrix_lr=0.02, weight_decay=0.0):
         model_dim = self.config.n_embd

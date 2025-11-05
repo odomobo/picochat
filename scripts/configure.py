@@ -11,6 +11,9 @@ Usage:
 import os
 import sys
 
+from nanochat.gpt import GPTConfig
+from nanochat.model_calculator import calculate_model_size, estimate_training_time
+
 
 def validate_batch_size(device_batch_size, total_batch_size, max_seq_len):
     """
@@ -204,27 +207,29 @@ def main():
         print(f"  Valid device_batch_size values: {divisors}")
         sys.exit(1)
 
-    # Calculate derived architecture values
+    # Calculate derived architecture values and model size
+    vocab_size = 24576  # 3 * 2^13, appropriate for tiny models
     num_heads = max(1, (model_dim + 127) // 128)
 
-    # Calculate parameter counts
-    vocab_size = 24576  # 3 * 2^13, appropriate for tiny models
-    # Per layer: attention (4 * model_dim^2) + MLP (8 * model_dim^2) = 12 * model_dim^2
-    transformer_params = depth * 12 * model_dim * model_dim
-    wte_params = vocab_size * model_dim  # Shared with lm_head
+    # Create GPTConfig and calculate model size
+    config = GPTConfig(
+        sequence_len=max_seq_len,
+        vocab_size=vocab_size,
+        n_layer=depth,
+        n_head=num_heads,
+        n_kv_head=num_heads,
+        n_embd=model_dim,
+        tie_weights=tie_weights,
+        use_output_projection=use_output_projection
+    )
+    model_info = calculate_model_size(config)
 
-    if tie_weights:
-        lm_head_params = 0  # Tied to wte
-    else:
-        lm_head_params = vocab_size * model_dim
-    
-    # Account for output projection if enabled
-    if use_output_projection:
-        output_projection_params = model_dim * model_dim
-    else:
-        output_projection_params = 0
-
-    total_params = wte_params + transformer_params + lm_head_params + output_projection_params
+    # Extract for easier access
+    total_params = model_info['total_params']
+    wte_params = model_info['embedding_params']
+    lm_head_params = model_info['unembedding_params']
+    output_projection_params = model_info['output_projection_params']
+    transformer_params = model_info['transformer_params']
     
 
     print()
@@ -255,6 +260,21 @@ def main():
     print("Batch configuration:")
     print(f"  Tokens per forward/backward: {tokens_per_fwdbwd:,}")
     print(f"  Gradient accumulation steps: {grad_accum_steps}")
+    print()
+
+    # Training time estimate
+    training_info = estimate_training_time(
+        config=config,
+        total_params=total_params,
+        target_param_data_ratio=target_param_data_ratio,
+        total_batch_size=total_batch_size
+    )
+    print("Training time estimate (RTX 3090):")
+    print(f"  Target tokens:               {training_info['target_tokens']:>12,} ({training_info['target_tokens']/1e9:>6.2f}B)")
+    print(f"  Num iterations:              {training_info['num_iterations']:>12,}")
+    print(f"  Total PetaFLOPs:             {training_info['total_petaflops']:>12.2f}")
+    print(f"  Estimated training time:     {training_info['training_time_hours']:>12.2f} hours")
+    print(f"  Shards needed:               ~{training_info['num_shards_needed']} shards")
     print()
 
     # Generate config file content
