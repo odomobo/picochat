@@ -7,6 +7,8 @@
 # - NANOCHAT_RUN_DIR and NANOCHAT_DATA_DIR must be set
 # - Configuration must exist at $NANOCHAT_RUN_DIR/config.py
 
+set -e  # Exit immediately if any command fails
+
 # Verify environment is set up
 if [ -z "$NANOCHAT_RUN_DIR" ]; then
     echo "ERROR: NANOCHAT_RUN_DIR is not set"
