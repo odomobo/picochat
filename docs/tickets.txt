@@ -12,17 +12,6 @@ Status   : PENDING
     Use this to capture all of my findings. This should only be the results of actual findings I make. Currently the only real finding is about weight tying and requiring an output linear projection to allow for effective training.
 ----------
 
----------- TICKET 008
-Title    : Queue processing script
-Status   : PENDING
-    Script which will take run names as command-line parameters and process each one sequentially. Before processing, will do simple validation to make sure runs exist and have not run yet, and to make sure there are no duplicates in the parameters.
-    The script does `set_run.sh ${current_run} && start_run.sh` on each run.
-    It should also set the title of the screen, using:
-    ` echo -en "\033]0;Your Desired Title\a" `
-    That should include run number as well: ${current} of ${total}
-    If a run fails, it should create a file like "run_failed" in the run directory.
-----------
-
 ---------- TICKET 019
 Title    : Save "transformer" parameter size in report
 Status   : PENDING
@@ -93,6 +82,12 @@ Status   : PENDING
 ----------
 
 ---------- TICKET 024
+Title    : run_start.sh improvements
+Status   : PENDING
+    When a sub-command fails in run_start.sh, it should cause the script to fail.
+----------
+
+---------- TICKET 025
 Title    : 
 Status   : PENDING
 
