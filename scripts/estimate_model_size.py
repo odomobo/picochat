@@ -7,7 +7,7 @@ Usage:
     python -m scripts.estimate_model_size
 """
 
-from nanochat.gpt import GPTConfig
+from nanochat.gpt_config import GPTConfig
 from nanochat.model_calculator import calculate_model_size, estimate_training_time
 
 

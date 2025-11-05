@@ -20,7 +20,8 @@ from contextlib import nullcontext
 import wandb
 import torch
 
-from nanochat.gpt import GPT, GPTConfig
+from nanochat.gpt import GPT
+from nanochat.gpt_config import GPTConfig
 from nanochat.dataloader import tokenizing_distributed_data_loader
 from nanochat.common import compute_init, compute_cleanup, print0, DummyWandb, print_banner, get_data_dir, get_run_dir, autodetect_device_type
 from nanochat.tokenizer import get_tokenizer, get_token_bytes

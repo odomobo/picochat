@@ -11,7 +11,7 @@ Usage:
 import os
 import sys
 
-from nanochat.gpt import GPTConfig
+from nanochat.gpt_config import GPTConfig
 from nanochat.model_calculator import calculate_model_size, estimate_training_time
 
 
