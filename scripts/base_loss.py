@@ -29,6 +29,7 @@ device_type = autodetect_device_type() if device_type == "" else device_type
 ddp, ddp_rank, ddp_local_rank, ddp_world_size, device = compute_init(device_type)
 model, tokenizer, meta = load_model("base", device, phase="eval", model_tag=model_tag, step=model_step)
 sequence_len = meta["model_config"]["sequence_len"] # could be arbitrary really
+corpus_name = meta.get("user_config", {}).get("corpus_name", "fineweb_edu")  # fallback to fineweb_edu if not found
 autocast_ctx = torch.amp.autocast(device_type=device_type, dtype=torch.bfloat16) if device_type == "cuda" else nullcontext()
 
 # Evaluate the loss on each split
@@ -38,7 +39,7 @@ steps = split_tokens // tokens_per_step
 token_bytes = get_token_bytes(device=device)
 bpb_results = {}
 for split_name in ["train", "val"]:
-    loader = tokenizing_distributed_data_loader(device_batch_size, sequence_len, split_name, device=device)
+    loader = tokenizing_distributed_data_loader(device_batch_size, sequence_len, split_name, corpus=corpus_name, device=device)
     with autocast_ctx:
         bpb = evaluate_bpb(model, loader, steps, token_bytes)
     print0(f"{split_name} bpb: {bpb:.4f}")
