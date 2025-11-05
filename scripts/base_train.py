@@ -28,6 +28,7 @@ from nanochat.tokenizer import get_tokenizer, get_token_bytes
 from nanochat.checkpoint_manager import save_checkpoint
 from nanochat.loss_eval import evaluate_bpb
 from nanochat.engine import Engine
+from nanochat.model_calculator import calculate_model_size
 from scripts.base_eval import evaluate_model
 print_banner()
 
@@ -146,6 +147,12 @@ orig_model = model # original, uncompiled model, for saving raw model state_dict
 model = torch.compile(model, dynamic=False) # TODO: dynamic True/False think through
 num_params = sum(p.numel() for p in model.parameters())
 print0(f"Number of parameters: {num_params:,}")
+
+# Calculate transformer parameters (for Chinchilla scaling)
+model_size_info = calculate_model_size(model_config)
+transformer_params = model_size_info['transformer_params']
+print0(f"Transformer parameters: {transformer_params:,}")
+
 num_flops_per_token = model.estimate_flops()
 print0(f"Estimated FLOPs per token: {num_flops_per_token:e}")
 
@@ -158,15 +165,15 @@ elif target_flops > 0:
     num_iterations = round(target_flops / (num_flops_per_token * total_batch_size))
     print0(f"Calculated number of iterations from target FLOPs: {num_iterations:,}")
 elif target_param_data_ratio > 0:
-    # calculate the number of iterations from the target param data ratio
-    target_tokens = target_param_data_ratio * num_params
+    # calculate the number of iterations from the target param data ratio (Chinchilla scaling based on transformer params)
+    target_tokens = target_param_data_ratio * transformer_params
     num_iterations = target_tokens // total_batch_size
     print0(f"Calculated number of iterations from target data:param ratio: {num_iterations:,}")
 else:
     raise ValueError("No training horizon specified")
 total_tokens = total_batch_size * num_iterations
 print0(f"Total number of training tokens: {total_tokens:,}")
-print0(f"Tokens : Params ratio: {total_batch_size * num_iterations / num_params:.2f}") # Chinchilla is ~20
+print0(f"Tokens : Transformer Params ratio: {total_batch_size * num_iterations / transformer_params:.2f}") # Chinchilla is ~20
 print0(f"Total training FLOPs estimate: {num_flops_per_token * total_tokens:e}")
 
 # -----------------------------------------------------------------------------
@@ -355,10 +362,11 @@ get_report().log(section="Base model training", data=[
     { # stats about the training setup
         "Corpus": corpus_name,
         "Number of parameters": num_params,
+        "Transformer parameters": transformer_params,
         "Number of FLOPs per token": f"{num_flops_per_token:e}",
         "Calculated number of iterations": num_iterations,
         "Number of training tokens": total_tokens,
-        "Tokens : Params ratio": total_batch_size * num_iterations / num_params,
+        "Tokens : Transformer Params ratio": total_batch_size * num_iterations / transformer_params,
         "DDP world size": ddp_world_size,
         "warmup_ratio": warmup_ratio,
         "warmdown_ratio": warmdown_ratio,
