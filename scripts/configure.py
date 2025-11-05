@@ -271,11 +271,11 @@ def main():
     )
     training_time_hours = training_info['training_time_seconds'] / 3600
     print("Training time estimate (RTX 3090):")
+    print(f"  Tokens:Params ratio:         {target_param_data_ratio}:1")
     print(f"  Target tokens:               {training_info['target_tokens']:>12,} ({training_info['target_tokens']/1e9:>6.2f}B)")
     print(f"  Num iterations:              {training_info['num_iterations']:>12,}")
     print(f"  Total PetaFLOPs:             {training_info['total_petaflops']:>12.2f}")
     print(f"  Estimated training time:     {training_time_hours:>12.2f} hours")
-    print(f"  Shards needed:               ~{training_info['num_shards_needed']} shards")
     print()
 
     # Generate config file content
