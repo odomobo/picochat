@@ -105,12 +105,6 @@ Status   : PENDING
     Depends on [012] of course.
 ----------
 
----------- TICKET 023
-Title    : "You must source"
-Status   : PENDING
-    Error when trying to run run_init.sh or run_set.sh
-----------
-
 ---------- TICKET 024
 Title    : 
 Status   : PENDING
