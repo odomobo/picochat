@@ -1,3 +1,8 @@
+---------- TICKET 022
+Title    : Fix GPU Keepawake
+Status   : PENDING
+----------
+
 ---------- TICKET 001
 Title    : TinyStories Corpus
 Status   : TESTING
@@ -105,7 +110,7 @@ Status   : PENDING
     Depends on [012] of course.
 ----------
 
----------- TICKET 022
+---------- TICKET 023
 Title    : 
 Status   : PENDING
 
