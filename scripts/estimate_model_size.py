@@ -51,12 +51,12 @@ def main():
     print()
 
     # Get architecture parameters
-    depth = get_int_input("Model depth (number of transformer layers)", default=20)
-    model_dim = get_int_input("Model dim (embedding dimension)", default=depth * 64)
-    vocab_size = get_int_input("Vocab size", default=65536)
+    depth = get_int_input("Model depth (number of transformer layers)", default=4)
+    model_dim = get_int_input("Model dim (embedding dimension)", default=512)
+    vocab_size = get_int_input("Vocab size", default=24576)
     max_seq_len = get_int_input("Max sequence length (context window)", default=2048)
-    tie_weights = get_bool_input("Tie embedding weights (wte and lm_head)?", default=False)
-    use_output_projection = get_bool_input("Use output projection matrix?", default=False)
+    tie_weights = get_bool_input("Tie embedding weights (wte and lm_head)?", default=True)
+    use_output_projection = get_bool_input("Use output projection matrix?", default=True)
 
     print()
     # Get training parameters
