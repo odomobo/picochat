@@ -23,12 +23,6 @@ Status   : PENDING
     If a run fails, it should create a file like "run_failed" in the run directory.
 ----------
 
----------- TICKET 009
-Title    : Update parameter calculations
-Status   : PENDING
-    Include tied weights twice when calculating flops. Only include transformer block weights in token ratio calculation.
-----------
-
 ---------- TICKET 019
 Title    : Save "transformer" parameter size in report
 Status   : PENDING
