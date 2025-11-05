@@ -81,12 +81,6 @@ Status   : PENDING
     Depends on [012] of course.
 ----------
 
----------- TICKET 024
-Title    : run_start.sh improvements
-Status   : PENDING
-    When a sub-command fails in run_start.sh, it should cause the script to fail.
-----------
-
 ---------- TICKET 025
 Title    : 
 Status   : PENDING
