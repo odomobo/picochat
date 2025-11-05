@@ -12,13 +12,6 @@ Status   : PENDING
     Use this to capture all of my findings. This should only be the results of actual findings I make. Currently the only real finding is about weight tying and requiring an output linear projection to allow for effective training.
 ----------
 
----------- TICKET 007
-Title    : Model size calculation scripts
-Status   : PENDING
-    Scripts to calculate potential model size based on parameters.
-    It should also calculate training time based on token ratio and some rough estimations based on actual training times.
-----------
-
 ---------- TICKET 008
 Title    : Queue processing script
 Status   : PENDING
