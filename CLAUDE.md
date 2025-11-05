@@ -10,12 +10,32 @@ nanochat is a full-stack implementation of an LLM like ChatGPT in a single, clea
 
 ## Ticket Workflow
 
-When processing tickets:
+When processing tickets, follow these steps **in order**:
 
-1. **Present understanding and implementation plan** - Explain what you think the ticket is asking for and how you would implement it
-2. **Ask questions based on uncertainty** - Only ask questions when genuinely uncertain about requirements. Skip this if you have confident understanding.
-3. **Iterate if needed** - Refine the plan through discussion, but only if necessary. A solid upfront plan can skip back-and-forth.
-4. **Get authorization** - Wait for explicit user approval before implementing. Never execute without authorization.
+1. **Present understanding and implementation plan FIRST**
+   - In your very first response, explain what you think the ticket is asking for
+   - Present a complete implementation plan with all technical details
+   - Do NOT ask questions yet, do NOT implement yet
+   - If you have uncertainties, note them in the plan but still present a complete picture
+
+2. **Ask questions based on uncertainty** (in the same first response)
+   - Only ask questions when genuinely uncertain about requirements
+   - If you have confident understanding, skip questions entirely
+   - Questions should be specific and actionable
+
+3. **Present revised plan after questions are answered**
+   - When user answers your questions, present an updated implementation plan
+   - Incorporate all the answers and clarifications into a concrete, detailed plan
+   - Show exactly what you will implement based on their feedback
+   - This revised plan is REQUIRED before proceeding - do not skip it
+
+4. **Get explicit authorization before implementing**
+   - Wait for explicit approval like "yes", "proceed", "go ahead", "implement this"
+   - Answering your questions is NOT authorization
+   - Providing clarifications is NOT authorization
+   - You must see clear permission to begin implementation after presenting the revised plan
+
+**CRITICAL**: Never write code, create files, or make changes until you receive explicit authorization. Clarifying questions and discussing the plan does not constitute permission to implement.
 
 **Note**: The "status" field in tickets is irrelevant to processing. This workflow applies to all types of tickets (features, bugs, refactoring, research, etc.).
 
