@@ -267,7 +267,7 @@ def main():
     # Training time estimate
     training_info = estimate_training_time(
         config=config,
-        total_params=total_params,
+        effective_params=model_info['effective_params'],
         target_param_data_ratio=target_param_data_ratio,
         total_batch_size=total_batch_size
     )

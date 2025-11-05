@@ -115,13 +115,13 @@ def estimate_flops_per_token(config, effective_params):
     return num_flops_per_token
 
 
-def estimate_training_time(config, total_params, target_param_data_ratio, total_batch_size):
+def estimate_training_time(config, effective_params, target_param_data_ratio, total_batch_size):
     """
     Estimate training time on single RTX 3090.
 
     Args:
         config: GPTConfig object
-        total_params: Total parameter count
+        effective_params: Effective parameter count (accounts for tied weights)
         target_param_data_ratio: Tokens per parameter (Chinchilla = 20)
         total_batch_size: Total batch size in tokens
 
@@ -133,15 +133,8 @@ def estimate_training_time(config, total_params, target_param_data_ratio, total_
     mfu = 0.40  # Model FLOPs Utilization (40%)
     overhead_minutes = 5  # Fixed overhead per run
 
-    # Calculate effective parameters (tied weights are used twice)
-    nparams_embedding = config.vocab_size * config.n_embd
-    if config.tie_weights:
-        effective_params = total_params + nparams_embedding
-    else:
-        effective_params = total_params
-
     # Calculate training parameters
-    target_tokens = total_params * target_param_data_ratio
+    target_tokens = effective_params * target_param_data_ratio
     num_iterations = int(target_tokens // total_batch_size)
 
     # Calculate FLOPs per token
