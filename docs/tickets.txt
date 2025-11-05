@@ -1,8 +1,3 @@
----------- TICKET 022
-Title    : Fix GPU Keepawake
-Status   : PENDING
-----------
-
 ---------- TICKET 001
 Title    : TinyStories Corpus
 Status   : TESTING
