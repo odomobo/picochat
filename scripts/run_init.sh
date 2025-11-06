@@ -61,7 +61,7 @@ fi
 # Re-enable debug mode
 set -x
 
-wandb login
+#wandb login
 
 # Initialize the report (will error if already exists)
 # This doesn't work currently, and actually, we don't need it
