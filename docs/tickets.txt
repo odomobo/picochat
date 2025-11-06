@@ -1,4 +1,15 @@
 
+---------- TICKET 012
+Title    : Add "conviction" head.
+Status   : IN PROGRESS
+    Add a scalar "conviction" head, which is trained based on the dot product of expected token embedding and actual embedding hidden state.
+---------- TICKET 013
+Title    : Confidence head completion tool
+Status   : PENDING
+    Since confidence is separate from the text itself, we need a way to run completions and see their confidence. Maybe hack mikupad to show confidence per token?
+    Depends on [012] of course.
+----------
+
 ---------- TICKET 011
 Title    : Create corpus size calculator
 Status   : PENDING
@@ -13,17 +24,6 @@ Title    : Create "tinystories/fineweb-edu" corpus
 Status   : PENDING
     Mix corpora together, probably 50:50
     Depends on [012]
-----------
-
----------- TICKET 012
-Title    : Add "conviction" head.
-Status   : PENDING
-    Add a scalar "conviction" head, which is trained based on the dot product of expected token embedding and actual embedding hidden state.
----------- TICKET 013
-Title    : Confidence head completion tool
-Status   : PENDING
-    Since confidence is separate from the text itself, we need a way to run completions and see their confidence. Maybe hack mikupad to show confidence per token?
-    Depends on [012] of course.
 ----------
 
 ---------- TICKET 030
