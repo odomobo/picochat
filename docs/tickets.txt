@@ -1,10 +1,4 @@
 
----------- TICKET 018
-Title    : Calculate optimal run sizes
-Status   : IN PROGRESS
-    Once wandb logging is fixed, it'll be trivial to determine optimal run sizes as long as we do several different runs.
-----------
-
 ---------- TICKET 020
 Title    : Calculate optimal hyperparameters
 Status   : PENDING
@@ -54,6 +48,12 @@ Title    : Biases
 Status   : ICEBOX
     Add another parameter, "enable_bias" or something like that, which enables biases for basically all matrices (unless there are any that don't make sense?)
     Note: simply (potential) optimiziation; low priority
+----------
+
+---------- TICKET 018
+Title    : Calculate optimal run sizes
+Status   : ICEBOX
+    Once wandb logging is fixed, it'll be trivial to determine optimal run sizes as long as we do several different runs.
 ----------
 
 ---------- TICKET 034
