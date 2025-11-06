@@ -1,10 +1,4 @@
 
----------- TICKET 015
-Title    : Change default context window size
-Status   : TESTING
-    ... to 1024. Need to perform tests to see if we need any changes in corpus to support this...
-----------
-
 ---------- TICKET 018
 Title    : Calculate optimal run sizes
 Status   : IN PROGRESS
