@@ -248,8 +248,8 @@ for step in range(num_iterations + 1):
         print0(f"Step {step:05d} | CORE metric: {results['core_metric']:.4f}")
         wandb_run.log({
             "total_training_petaflops": flops_so_far / 1e15,
-            "core_metric": results["core_metric"],
-            "centered_results": results["centered_results"],
+            "benchmarks/core_metric": results["core_metric"],
+            "benchmarks/centered_results": results["centered_results"],
         })
         model.train()
 
@@ -343,6 +343,7 @@ for step in range(num_iterations + 1):
         wandb_run.log({
             "total_training_petaflops": flops_so_far / 1e15,
             "step": step,
+            "total_tokens": step * total_batch_size,
             "total_training_flops": flops_so_far,
             "total_training_time": total_training_time,
             "train/loss": debiased_smooth_loss,
