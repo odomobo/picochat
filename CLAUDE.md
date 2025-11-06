@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-nanochat is a full-stack implementation of an LLM like ChatGPT in a single, clean, minimal, hackable codebase. It trains ChatGPT-style models from scratch including tokenization, pretraining, finetuning, evaluation, and inference. The entire pipeline is designed to run on a single 8XH100 node.
+nanochat is a minimal, hackable codebase for training small-scale language models from scratch. This fork focuses on rapid experimentation with pretraining at the <100M parameter scale to understand scaling laws, architecture choices, and optimization dynamics.
 
 **Philosophy**: nanochat is not an exhaustively configurable LLM "framework" - it's a cohesive, minimal, readable, hackable, maximally-forkable "strong baseline" codebase. Avoid adding giant configuration objects, model factories, or complex if-then-else logic.
+
+**Current Focus**: The codebase currently focuses on base model pretraining only. Midtraining, supervised fine-tuning (SFT), and reinforcement learning (RL) stages are legacy components not used in the current experimental workflow.
 
 ## Ticket Workflow
 
@@ -72,12 +74,7 @@ python -m pytest -m "not slow"  # Exclude slow tests
 
 ### Training Commands
 
-**Quick speedrun (~$100, 4 hours on 8XH100)**:
-```bash
-bash speedrun.sh
-# Or in a screen session with logging:
-screen -L -Logfile speedrun.log -S speedrun bash speedrun.sh
-```
+**Note**: The `speedrun.sh` script is from the original nanochat and has been removed. For current experiments, use the run initialization workflow described in the "Experimental Workflow" section below.
 
 **Distributed training (multi-GPU)**:
 ```bash
@@ -95,17 +92,8 @@ python -m scripts.base_train -- --depth=4 --max_seq_len=512 --device_batch_size=
 ```
 
 ### Inference & Chat
-```bash
-# Chat via CLI (interactive)
-python -m scripts.chat_cli
 
-# Chat via CLI (single prompt)
-python -m scripts.chat_cli -p "Why is the sky blue?"
-
-# Chat via web UI (ChatGPT-style interface)
-python -m scripts.chat_web
-# Then visit the URL shown (e.g., http://YOUR_IP:8000/)
-```
+**Note**: Chat interfaces (chat_cli.py, chat_web.py) from the original nanochat have been removed. This fork focuses on pretraining base models, not chat applications.
 
 ### Individual Pipeline Stages
 ```bash
@@ -117,19 +105,9 @@ python -m scripts.tok_eval
 torchrun --standalone --nproc_per_node=8 -m scripts.base_train -- --depth=20
 torchrun --standalone --nproc_per_node=8 -m scripts.base_loss
 torchrun --standalone --nproc_per_node=8 -m scripts.base_eval
-
-# 3. Midtraining (conversation tokens, tool use, multiple choice)
-torchrun --standalone --nproc_per_node=8 -m scripts.mid_train
-torchrun --standalone --nproc_per_node=8 -m scripts.chat_eval -- -i mid
-
-# 4. Supervised Fine-tuning (SFT)
-torchrun --standalone --nproc_per_node=8 -m scripts.chat_sft
-torchrun --standalone --nproc_per_node=8 -m scripts.chat_eval -- -i sft
-
-# 5. Reinforcement Learning (optional, GSM8K only)
-torchrun --standalone --nproc_per_node=8 -m scripts.chat_rl
-torchrun --standalone --nproc_per_node=8 -m scripts.chat_eval -- -i rl -a GSM8K
 ```
+
+**Note**: This codebase focuses on base model pretraining only. The original nanochat included midtraining, SFT, and RL stages, but those have been removed from this fork.
 
 ### Data Management
 ```bash
@@ -140,13 +118,14 @@ python -m nanochat.dataset -n 240  # Downloads 240 shards for d20 model
 ## Architecture
 
 ### Training Pipeline Stages
+
+**Current workflow (pretraining only):**
 1. **Tokenizer Training** (rustbpe): Custom Rust BPE tokenizer
    - Default vocab size: 65536 (2^16) for full-scale models
    - Tiny model vocab size: 24576 (3 × 2^13) - appropriate for experimental models <100M parameters
 2. **Base Model Pretraining**: GPT-style autoregressive language modeling on web text
-3. **Midtraining**: Teach conversation format, special tokens, tool use, multiple choice
-4. **Supervised Fine-tuning (SFT)**: Domain adaptation per-sequence
-5. **Reinforcement Learning (RL)**: Optional post-training on specific tasks (currently GSM8K)
+
+The original nanochat included additional stages (Midtraining, SFT, RL) for training chat models, but these have been removed from this fork as they're not relevant for small-scale pretraining experiments.
 
 ### Model Architecture (nanochat/gpt.py)
 
@@ -207,11 +186,10 @@ Both have distributed variants (DistAdamW, DistMuon) for multi-GPU training.
 
 ### Checkpoint Management (nanochat/checkpoint_manager.py)
 
-Models are saved to `~/.cache/nanochat/{model_tag}/` by default:
+Models are saved to `$NANOCHAT_RUN_DIR/`:
 - `base.pt`: Pretrained base model
-- `mid.pt`: After midtraining
-- `sft.pt`: After supervised fine-tuning
-- `rl.pt`: After reinforcement learning (optional)
+
+(The original nanochat also saved `mid.pt`, `sft.pt`, `rl.pt` checkpoints, but those pipeline stages have been removed from this fork.)
 
 **Backward Compatibility Pattern**: When adding new features to the model architecture, follow this pattern to ensure old checkpoints continue to work:
 
@@ -252,14 +230,13 @@ This pattern enables continuous feature additions while maintaining full backwar
 ### Evaluation Tasks (tasks/)
 
 Task framework with `TaskMixture` and `TaskSequence` abstractions:
-- **CORE**: Comprehensive evaluation from DCLM paper (base model quality)
+- **CORE**: Comprehensive evaluation from DCLM paper (base model quality) - **primary benchmark for current workflow**
 - **ARC**: AI2 Reasoning Challenge (science questions)
 - **GSM8K**: Grade School Math (8K problems)
 - **HumanEval**: Python coding task
 - **MMLU**: Massive Multitask Language Understanding
-- **SmolTalk**: Conversational dataset from HuggingFace
-- **SpellingBee**: Custom task for teaching letter counting/spelling
-- **CustomJSON**: Load arbitrary conversational datasets from JSONL
+
+Other tasks like SmolTalk, SpellingBee, CustomJSON exist in the tasks/ directory (inherited from original nanochat) but are designed for chat/instruct models and not actively used in the pretraining-only workflow.
 
 ### Report Generation (nanochat/report.py)
 
@@ -294,35 +271,19 @@ num_shards = 54B / 250M ≈ 216 shards (round to 240)
 
 This is why speedrun.sh downloads 240 shards (~24GB).
 
-## Customization
+## Training Larger Models
 
-### Adding Custom Personality/Identity
+For experimental purposes with small models (<100M params), the default configuration uses `depth=4` and `vocab_size=24576`. To scale up:
 
-See GitHub Discussions guide: "infusing identity to your nanochat"
-1. Generate synthetic conversation data (see dev/gen_synthetic_data.py)
-2. Save as JSONL format
-3. Mix into midtraining and SFT stages
-
-### Adding New Capabilities
-
-See GitHub Discussions guide: "counting r in strawberry (and how to add abilities generally)"
-1. Create custom task in tasks/ directory
-2. Add to TaskMixture for midtraining
-3. Evaluate with chat_eval
-
-### Training Larger Models (d26, d32)
-
-To train GPT-2 grade d26 model from speedrun.sh:
 ```bash
-# Download more data shards (450 for d26)
+# For larger pretraining runs, download more data shards
 python -m nanochat.dataset -n 450 &
 
-# Increase depth, decrease batch size to fit in memory
+# Increase depth (model size) and adjust batch size for memory
 torchrun --standalone --nproc_per_node=8 -m scripts.base_train -- --depth=26 --device_batch_size=16
-
-# Use same batch size in midtraining
-torchrun --standalone --nproc_per_node=8 -m scripts.mid_train -- --device_batch_size=16
 ```
+
+**Note**: The original nanochat supported training larger chat models (d20/d26/d32) with a full chat model pipeline. This fork has removed those components and focuses on small-scale pretraining experiments.
 
 ## Computing Environment Notes
 
@@ -383,14 +344,15 @@ scripts/            # Entry point scripts
   base_train.py     # Pretrain base model
   base_eval.py      # Evaluate CORE score
   base_loss.py      # Evaluate bits per byte
-  mid_train.py      # Midtraining
-  chat_sft.py       # Supervised fine-tuning
-  chat_rl.py        # Reinforcement learning
-  chat_eval.py      # Evaluate chat models
-  chat_cli.py       # CLI chat interface
-  chat_web.py       # Web UI chat interface
+  base_complete.py  # Model completion utility
   tok_train.py      # Train tokenizer
   tok_eval.py       # Evaluate tokenizer
+  configure.py      # Configuration wizard for experiments
+  estimate_model_size.py  # Model size calculator
+  run_init.sh       # Initialize new experiment run
+  run_set.sh        # Switch to existing experiment run
+  run_start.sh      # Start training run
+  queue_runs.sh     # Queue multiple experimental runs
 
 tasks/              # Evaluation task definitions
   common.py         # TaskMixture, TaskSequence
@@ -482,13 +444,12 @@ Configuration is handled by a configuration wizard, `scripts/configure.py`. It s
 
 ### Why Pretraining Only?
 
-At small scales (<100M parameters), the models lack the capacity to benefit meaningfully from instruct finetuning. The experimental focus is on understanding:
-- Architecture efficiency at different scales
-- Data requirements and scaling laws
-- Tokenizer impact on model performance
-- Training dynamics and optimization
+This fork focuses exclusively on base model pretraining at small scales (<100M parameters). At this scale:
+- Models lack the capacity to benefit meaningfully from instruct finetuning
+- The goal is to understand fundamental properties: architecture efficiency, scaling laws, tokenizer impact, optimization dynamics
+- Chat capabilities (midtraining/SFT/RL) are irrelevant to these research questions
 
-Midtraining, SFT, and RL stages remain in the codebase but are not part of the current experimental workflow.
+The original nanochat included midtraining, SFT, and RL training stages for building chat models. These have been completely removed from this fork, which focuses exclusively on base model pretraining for scaling research.
 
 ### Codebase Adaptation Notes
 
