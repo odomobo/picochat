@@ -6,11 +6,6 @@ Status   : TESTING
     Need to verify this actually works.
 ----------
 
----------- TICKET 019
-Title    : Save "transformer" parameter size in report
-Status   : PENDING
-----------
-
 ---------- TICKET 018
 Title    : Calculate optimal run sizes
 Status   : PENDING
