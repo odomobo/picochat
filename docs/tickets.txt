@@ -58,6 +58,23 @@ Status   : PENDING
 ----------
 
 ---------- TICKET 030
+Title    : Gating
+Status   : PENDING
+    Add another parameter, "gated", which when true, adds a separate up_proj matrix which gets element-wise multiplied before going through the down_proj matrix. Maybe it should be named to "gate_signal"
+----------
+
+---------- TICKET 031
+Title    : Biases
+Status   : PENDING
+    Add another parameter, "enable_bias" or something like that, which enables biases for basically all matrices (unless there are any that don't make sense?)
+----------
+
+---------- TICKET 032
+Title    : Cleanup config script output
+Status   : PENDING
+----------
+
+---------- TICKET 033
 Title    : 
 Status   : PENDING
 
