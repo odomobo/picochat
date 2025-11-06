@@ -1,9 +1,4 @@
 
----------- TICKET 029
-Title    : Actually save num_heads and num_kv_heads in config scripts; propagate them through the system
-Status   : PENDING
-----------
-
 ---------- TICKET 011
 Title    : Create corpus size calculator
 Status   : PENDING
