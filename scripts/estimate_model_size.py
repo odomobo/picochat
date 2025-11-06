@@ -83,7 +83,6 @@ def main():
     training_info = estimate_training_time(
         config=config,
         effective_params=model_info['effective_params'],
-        transformer_params=model_info['transformer_params'],
         target_param_data_ratio=target_param_data_ratio,
         total_batch_size=total_batch_size
     )

@@ -115,14 +115,13 @@ def estimate_flops_per_token(config, effective_params):
     return num_flops_per_token
 
 
-def estimate_training_time(config, effective_params, transformer_params, target_param_data_ratio, total_batch_size):
+def estimate_training_time(config, effective_params, target_param_data_ratio, total_batch_size):
     """
     Estimate training time on single RTX 3090.
 
     Args:
         config: GPTConfig object
         effective_params: Effective parameter count (accounts for tied weights, used for Chinchilla scaling and FLOPs)
-        transformer_params: Transformer parameter count (legacy, kept for backward compatibility)
         target_param_data_ratio: Tokens per parameter (Chinchilla = 20)
         total_batch_size: Total batch size in tokens
 
