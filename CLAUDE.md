@@ -30,6 +30,7 @@ When processing tickets, follow these steps **in order**:
    - Incorporate all the answers and clarifications into a concrete, detailed plan
    - Show exactly what you will implement based on their feedback
    - This revised plan is REQUIRED before proceeding - do not skip it
+   - If any new questions arose when revising the plan, make sure to ask them now, but only if you have any genuine uncertainty. Refer to #2.
 
 4. **Get explicit authorization before implementing**
    - Wait for explicit approval like "yes", "proceed", "go ahead", "implement this"
