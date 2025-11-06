@@ -167,6 +167,24 @@ def main():
     model_dim = get_int_input(f"Model dim (embedding dimension)", default=default_model_dim)
     tie_weights = get_bool_input("Tie embedding weights (wte and lm_head)? Reduces params by ~50%", default=True)
 
+    # Architecture customization
+    print()
+    print("Advanced architecture options:")
+    activation_fn = get_string_input("Activation function (relu_squared, relu, gelu)", default="relu_squared")
+    if activation_fn not in ["relu_squared", "relu", "gelu"]:
+        print(f"WARNING: Unknown activation function '{activation_fn}'. Proceeding anyway, but this may cause errors.")
+
+    head_dim = get_int_input("Attention head dimension", default=128)
+    ffn_expansion_ratio = get_float_input("FFN expansion ratio (intermediate_dim = model_dim * ratio)", default=4.0)
+
+    # Warn if intermediate dimension isn't a multiple of 128
+    intermediate_dim = int(model_dim * ffn_expansion_ratio)
+    if intermediate_dim % 128 != 0:
+        print(f"WARNING: FFN intermediate dimension ({intermediate_dim}) is not a multiple of 128.")
+        print(f"         This may cause GPU inefficiencies. Consider adjusting model_dim or ffn_expansion_ratio.")
+        print(f"         Suggested: model_dim={model_dim}, ffn_expansion_ratio={128 * round(intermediate_dim / 128) / model_dim:.2f}")
+    print()
+
     # Only ask for tied_weights_lr if tie_weights is enabled
     if tie_weights:
         tied_weights_lr = get_float_input("Learning rate for tied weights (standard: 0.02)", default=0.02)
@@ -209,7 +227,7 @@ def main():
 
     # Calculate derived architecture values and model size
     vocab_size = 24576  # 3 * 2^13, appropriate for tiny models
-    num_heads = max(1, (model_dim + 127) // 128)
+    num_heads = max(1, (model_dim + head_dim - 1) // head_dim)  # ceiling division
 
     # Create GPTConfig and calculate model size
     config = GPTConfig(
@@ -220,7 +238,10 @@ def main():
         n_kv_head=num_heads,
         n_embd=model_dim,
         tie_weights=tie_weights,
-        use_output_projection=use_output_projection
+        use_output_projection=use_output_projection,
+        activation_fn=activation_fn,
+        head_dim=head_dim,
+        ffn_expansion_ratio=ffn_expansion_ratio
     )
     model_info = calculate_model_size(config)
 
@@ -237,7 +258,9 @@ def main():
     print(f"  Depth: {depth}")
     print(f"  Model dim: {model_dim}")
     print(f"  Num heads: {num_heads}")
-    print(f"  Head dim: 128")
+    print(f"  Head dim: {head_dim}")
+    print(f"  Activation: {activation_fn}")
+    print(f"  FFN expansion ratio: {ffn_expansion_ratio}x (intermediate dim: {intermediate_dim})")
     print(f"  Weight tying: {'enabled' if tie_weights else 'disabled'}")
     print(f"  Output projection: {'enabled' if use_output_projection else 'disabled'}")
     print()
@@ -298,6 +321,9 @@ depth = {depth}
 model_dim = {model_dim}  # aspect ratio {model_dim / depth if depth != 0 else 0:.1f} (or custom)
 max_seq_len = {max_seq_len}
 tie_weights = {str(tie_weights)}  # tie wte and lm_head weights (reduces params by ~50%)
+activation_fn = "{activation_fn}"  # activation function: relu_squared, relu, gelu
+head_dim = {head_dim}  # attention head dimension
+ffn_expansion_ratio = {ffn_expansion_ratio}  # MLP expansion ratio
 
 # Optimization
 device_batch_size = {device_batch_size}
@@ -313,7 +339,8 @@ target_flops = -1.0  # calculate iterations to reach target FLOPs (-1 = disabled
 target_param_data_ratio = {target_param_data_ratio}  # Chinchilla scaling (20 = 20 tokens per effective parameter)
 
 # Derived values (calculated from config above):
-# num_heads = max(1, (model_dim + 127) // 128) = {num_heads}
+# num_heads = max(1, (model_dim + head_dim - 1) // head_dim) = {num_heads}
+# intermediate_dim = int(model_dim * ffn_expansion_ratio) = {intermediate_dim}
 # tokens_per_fwdbwd = device_batch_size * max_seq_len = {tokens_per_fwdbwd:,}
 # grad_accum_steps = total_batch_size // tokens_per_fwdbwd = {grad_accum_steps}
 """

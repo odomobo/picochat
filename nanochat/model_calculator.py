@@ -56,8 +56,9 @@ def calculate_model_size(config):
     attn_params_per_layer = attn_c_q_params + attn_c_k_params + attn_c_v_params + attn_c_proj_params
 
     # MLP parameters
-    mlp_c_fc_params = model_dim * (4 * model_dim)
-    mlp_c_proj_params = (4 * model_dim) * model_dim
+    intermediate_dim = int(model_dim * config.ffn_expansion_ratio)
+    mlp_c_fc_params = model_dim * intermediate_dim
+    mlp_c_proj_params = intermediate_dim * model_dim
     mlp_params_per_layer = mlp_c_fc_params + mlp_c_proj_params
 
     params_per_layer = attn_params_per_layer + mlp_params_per_layer

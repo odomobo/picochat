@@ -45,6 +45,9 @@ model_dim = depth * 64 # embedding dimension
 max_seq_len = 2048 # max context length
 tie_weights = False # tie wte and lm_head weights (reduces params by ~50%, backward compatible default)
 use_output_projection = False # output projection layer to reduce the limitations of tiny language models when working with tied weights
+activation_fn = "relu_squared" # activation function: relu_squared, relu, gelu
+head_dim = 128 # attention head dimension
+ffn_expansion_ratio = 4.0 # MLP expansion ratio (intermediate_dim = model_dim * ffn_expansion_ratio)
 # Training horizon. Only one of these 3 will be used, in this order of precedence.
 num_iterations = -1 # explicit number of steps of the optimization (-1 = disable)
 target_flops = -1.0 # calculate num_iterations to reach target_flops. Useful for scaling laws experiments (-1 = disable)
@@ -119,10 +122,11 @@ print0(f"Vocab size: {vocab_size:,}")
 
 # Model kwargs are derived from the desired depth of the model
 num_layers = depth
-num_heads = max(1, (model_dim + 127) // 128) # head dim 128 (the division here is ceil div)
+num_heads = max(1, (model_dim + head_dim - 1) // head_dim) # ceiling division: model_dim / head_dim
 num_kv_heads = num_heads # default is 1:1 GQA (Group Query Attention) ratio (i.e. GQA is disabled)
 print0(f"num_layers: {num_layers}")
 print0(f"model_dim: {model_dim}")
+print0(f"head_dim: {head_dim}")
 print0(f"num_heads: {num_heads}")
 print0(f"num_kv_heads: {num_kv_heads}")
 
@@ -137,7 +141,7 @@ print0(f"Tokens / micro-batch: {world_tokens_per_fwdbwd:,}")
 print0(f"Total batch size {total_batch_size:,} => gradient accumulation steps: {grad_accum_steps}")
 # -----------------------------------------------------------------------------
 # Initialize the Model
-model_config_kwargs = dict(sequence_len=max_seq_len, vocab_size=vocab_size, n_layer=num_layers, n_head=num_heads, n_kv_head=num_kv_heads, n_embd=model_dim, tie_weights=tie_weights, use_output_projection=use_output_projection)
+model_config_kwargs = dict(sequence_len=max_seq_len, vocab_size=vocab_size, n_layer=num_layers, n_head=num_heads, n_kv_head=num_kv_heads, n_embd=model_dim, tie_weights=tie_weights, use_output_projection=use_output_projection, activation_fn=activation_fn, head_dim=head_dim, ffn_expansion_ratio=ffn_expansion_ratio)
 with torch.device("meta"):
     model_config = GPTConfig(**model_config_kwargs)
     model = GPT(model_config)

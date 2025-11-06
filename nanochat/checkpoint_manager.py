@@ -67,7 +67,19 @@ def _backward_compatibility(model_config_kwargs):
     if "use_output_projection" not in model_config_kwargs:
         model_config_kwargs["use_output_projection"] = False
         log0("Warning: use_output_projection not found in checkpoint metadata, assuming False (old untied model)")
-    
+
+    if "activation_fn" not in model_config_kwargs:
+        model_config_kwargs["activation_fn"] = "relu_squared"
+        log0("Warning: activation_fn not found in checkpoint metadata, assuming relu_squared (old behavior)")
+
+    if "head_dim" not in model_config_kwargs:
+        model_config_kwargs["head_dim"] = 128
+        log0("Warning: head_dim not found in checkpoint metadata, assuming 128 (old behavior)")
+
+    if "ffn_expansion_ratio" not in model_config_kwargs:
+        model_config_kwargs["ffn_expansion_ratio"] = 4.0
+        log0("Warning: ffn_expansion_ratio not found in checkpoint metadata, assuming 4.0 (old behavior)")
+
     return model_config_kwargs
 
 def build_model(checkpoint_dir, step, device, phase):

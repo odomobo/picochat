@@ -23,6 +23,26 @@ def get_int_input(prompt, default):
             print(f"  ERROR: Please enter a valid integer")
 
 
+def get_float_input(prompt, default):
+    """Get float input with default value."""
+    while True:
+        response = input(f"{prompt} [default: {default}]: ").strip()
+        if not response:
+            return default
+        try:
+            return float(response)
+        except ValueError:
+            print(f"  ERROR: Please enter a valid number")
+
+
+def get_string_input(prompt, default):
+    """Get string input with default value."""
+    response = input(f"{prompt} [default: {default}]: ").strip()
+    if not response:
+        return default
+    return response
+
+
 def get_bool_input(prompt, default):
     """Get boolean input with default value (y/n)."""
     default_str = "y" if default else "n"
@@ -58,13 +78,27 @@ def main():
     tie_weights = get_bool_input("Tie embedding weights (wte and lm_head)?", default=True)
     use_output_projection = get_bool_input("Use output projection matrix?", default=True)
 
+    # Advanced architecture options
+    activation_fn = get_string_input("Activation function (relu_squared, relu, gelu)", default="relu_squared")
+    if activation_fn not in ["relu_squared", "relu", "gelu"]:
+        print(f"WARNING: Unknown activation function '{activation_fn}'. Proceeding anyway.")
+
+    head_dim = get_int_input("Attention head dimension", default=128)
+    ffn_expansion_ratio = get_float_input("FFN expansion ratio (intermediate_dim = model_dim * ratio)", default=4.0)
+
+    # Warn if intermediate dimension isn't a multiple of 128
+    intermediate_dim = int(model_dim * ffn_expansion_ratio)
+    if intermediate_dim % 128 != 0:
+        print(f"WARNING: FFN intermediate dimension ({intermediate_dim}) is not a multiple of 128.")
+        print(f"         This may cause GPU inefficiencies. Consider adjusting model_dim or ffn_expansion_ratio.")
+
     print()
     # Get training parameters
     target_param_data_ratio = get_int_input("Target param:data ratio (Chinchilla=20)", default=20)
     total_batch_size = get_int_input("Total batch size (tokens)", default=524288)
 
     # Create config
-    num_heads = max(1, (model_dim + 127) // 128)
+    num_heads = max(1, (model_dim + head_dim - 1) // head_dim)  # ceiling division
     config = GPTConfig(
         sequence_len=max_seq_len,
         vocab_size=vocab_size,
@@ -73,7 +107,10 @@ def main():
         n_kv_head=num_heads,
         n_embd=model_dim,
         tie_weights=tie_weights,
-        use_output_projection=use_output_projection
+        use_output_projection=use_output_projection,
+        activation_fn=activation_fn,
+        head_dim=head_dim,
+        ffn_expansion_ratio=ffn_expansion_ratio
     )
 
     # Calculate model size
@@ -98,6 +135,8 @@ def main():
     print(f"  Model dim:                   {model_info['model_dim']:,}")
     print(f"  Num heads:                   {model_info['num_heads']}")
     print(f"  Head dim:                    {model_info['head_dim']}")
+    print(f"  Activation:                  {activation_fn}")
+    print(f"  FFN expansion ratio:         {ffn_expansion_ratio}x (intermediate dim: {intermediate_dim})")
     print(f"  Vocab size:                  {model_info['vocab_size']:,}")
     print(f"  Max seq len:                 {model_info['max_seq_len']:,}")
     print(f"  Weight tying:                {'enabled' if model_info['tie_weights'] else 'disabled'}")
