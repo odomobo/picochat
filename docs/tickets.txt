@@ -6,10 +6,9 @@ Status   : TESTING
     Need to verify this actually works.
 ----------
 
----------- TICKET 028
-Title    : Refactor wizards
+---------- TICKET 029
+Title    : Actually save num_heads and num_kv_heads in config scripts; propagate them through the system
 Status   : PENDING
-    Both the configuration and the estimate_model_size wizards share a ton in common; refactor out their commonalities (including asking all the same questions, doing the same calculations). Actually, maybe instead of having both, maybe there should be a parameter we can pass to configuration to give it a dry run, so it doesn't actually create the "run".
 ----------
 
 ---------- TICKET 018
@@ -57,7 +56,7 @@ Status   : PENDING
     Depends on [012] of course.
 ----------
 
----------- TICKET 029
+---------- TICKET 030
 Title    : 
 Status   : PENDING
 
