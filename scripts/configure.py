@@ -177,6 +177,12 @@ def main():
     head_dim = get_int_input("Attention head dimension", default=128)
     ffn_expansion_ratio = get_float_input("FFN expansion ratio (intermediate_dim = model_dim * ratio)", default=4.0)
 
+    # Warn if model_dim is not divisible by head_dim
+    if model_dim % head_dim != 0:
+        print(f"WARNING: model_dim ({model_dim}) is not divisible by head_dim ({head_dim}).")
+        print(f"         This will result in wasted dimensions in attention heads.")
+        print(f"         Suggested: Use head_dim that divides model_dim evenly.")
+
     # Warn if intermediate dimension isn't a multiple of 128
     intermediate_dim = int(model_dim * ffn_expansion_ratio)
     if intermediate_dim % 128 != 0:

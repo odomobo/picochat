@@ -44,12 +44,11 @@ class CausalSelfAttention(nn.Module):
     def __init__(self, config, layer_idx):
         super().__init__()
         self.layer_idx = layer_idx
-        self.n_head = config.n_head
-        self.n_kv_head = config.n_kv_head
         self.n_embd = config.n_embd
         self.head_dim = config.head_dim
-        # Validate that n_head and head_dim are consistent with n_embd
-        assert self.n_embd == self.n_head * self.head_dim, f"n_embd ({self.n_embd}) must equal n_head ({self.n_head}) * head_dim ({self.head_dim})"
+        # Calculate n_head from n_embd and head_dim (don't use config.n_head)
+        self.n_head = self.n_embd // self.head_dim
+        self.n_kv_head = config.n_kv_head
         assert self.n_kv_head <= self.n_head and self.n_head % self.n_kv_head == 0
         self.c_q = nn.Linear(self.n_embd, self.n_head * self.head_dim, bias=False)
         self.c_k = nn.Linear(self.n_embd, self.n_kv_head * self.head_dim, bias=False)
@@ -106,9 +105,9 @@ class CausalSelfAttention(nn.Module):
 class MLP(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.intermediate_dim = int(config.n_embd * config.ffn_expansion_ratio)
-        self.c_fc = nn.Linear(config.n_embd, self.intermediate_dim, bias=False)
-        self.c_proj = nn.Linear(self.intermediate_dim, config.n_embd, bias=False)
+        intermediate_dim = int(config.n_embd * config.ffn_expansion_ratio)
+        self.c_fc = nn.Linear(config.n_embd, intermediate_dim, bias=False)
+        self.c_proj = nn.Linear(intermediate_dim, config.n_embd, bias=False)
         self.activation_fn = config.activation_fn
 
     def forward(self, x):

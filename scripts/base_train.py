@@ -124,6 +124,18 @@ print0(f"Vocab size: {vocab_size:,}")
 num_layers = depth
 num_heads = max(1, (model_dim + head_dim - 1) // head_dim) # ceiling division: model_dim / head_dim
 num_kv_heads = num_heads # default is 1:1 GQA (Group Query Attention) ratio (i.e. GQA is disabled)
+
+# Warn if model_dim is not divisible by head_dim
+if model_dim % head_dim != 0:
+    print0(f"WARNING: model_dim ({model_dim}) is not divisible by head_dim ({head_dim}).")
+    print0(f"         This will result in wasted dimensions in attention heads ({num_heads * head_dim} used vs {model_dim} available).")
+
+# Warn if FFN intermediate dimension isn't a multiple of 128
+intermediate_dim = int(model_dim * ffn_expansion_ratio)
+if intermediate_dim % 128 != 0:
+    print0(f"WARNING: FFN intermediate dimension ({intermediate_dim}) is not a multiple of 128.")
+    print0(f"         This may cause GPU inefficiencies.")
+
 print0(f"num_layers: {num_layers}")
 print0(f"model_dim: {model_dim}")
 print0(f"head_dim: {head_dim}")
