@@ -276,7 +276,7 @@ def main():
     hours = total_minutes // 60
     minutes = total_minutes % 60
     print("Training time estimate (RTX 3090):")
-    print(f"  Tokens:Params ratio:         {target_param_data_ratio}:1")
+    print(f"  Tokens:Effective Params ratio: {target_param_data_ratio}:1")
     print(f"  Target tokens:               {training_info['target_tokens']:>12,} ({training_info['target_tokens']/1e9:>6.2f}B)")
     print(f"  Num iterations:              {training_info['num_iterations']:>12,}")
     print(f"  Total PetaFLOPs:             {training_info['total_petaflops']:>12.2f}")
@@ -311,7 +311,7 @@ use_output_projection = {use_output_projection}
 # Priority: num_iterations > target_flops > target_param_data_ratio
 num_iterations = -1  # explicit number of steps (-1 = use target_param_data_ratio)
 target_flops = -1.0  # calculate iterations to reach target FLOPs (-1 = disabled)
-target_param_data_ratio = {target_param_data_ratio}  # Chinchilla scaling (20 = 20 tokens per parameter)
+target_param_data_ratio = {target_param_data_ratio}  # Chinchilla scaling (20 = 20 tokens per effective parameter)
 
 # Derived values (calculated from config above):
 # num_heads = max(1, (model_dim + 127) // 128) = {num_heads}

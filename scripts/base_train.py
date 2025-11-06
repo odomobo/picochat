@@ -48,7 +48,7 @@ use_output_projection = False # output projection layer to reduce the limitation
 # Training horizon. Only one of these 3 will be used, in this order of precedence.
 num_iterations = -1 # explicit number of steps of the optimization (-1 = disable)
 target_flops = -1.0 # calculate num_iterations to reach target_flops. Useful for scaling laws experiments (-1 = disable)
-target_param_data_ratio = 20 # calculate num_iterations to maintain fixed data:param ratio (Chinchilla=20) (-1 = disable)
+target_param_data_ratio = 20 # calculate num_iterations to maintain fixed tokens:effective_params ratio (Chinchilla=20) (-1 = disable)
 # Optimization
 device_batch_size = 32 # per-device batch size (set to not OOM)
 total_batch_size = 524288 # total desired batch size, in #tokens
@@ -148,10 +148,12 @@ model = torch.compile(model, dynamic=False) # TODO: dynamic True/False think thr
 num_params = sum(p.numel() for p in model.parameters())
 print0(f"Number of parameters: {num_params:,}")
 
-# Calculate transformer parameters (for Chinchilla scaling)
+# Calculate model parameters (for Chinchilla scaling)
 model_size_info = calculate_model_size(model_config)
 transformer_params = model_size_info['transformer_params']
+effective_params = model_size_info['effective_params']
 print0(f"Transformer parameters: {transformer_params:,}")
+print0(f"Effective parameters (for Chinchilla scaling): {effective_params:,}")
 
 num_flops_per_token = model.estimate_flops()
 print0(f"Estimated FLOPs per token: {num_flops_per_token:e}")
@@ -165,15 +167,15 @@ elif target_flops > 0:
     num_iterations = round(target_flops / (num_flops_per_token * total_batch_size))
     print0(f"Calculated number of iterations from target FLOPs: {num_iterations:,}")
 elif target_param_data_ratio > 0:
-    # calculate the number of iterations from the target param data ratio (Chinchilla scaling based on transformer params)
-    target_tokens = target_param_data_ratio * transformer_params
+    # calculate the number of iterations from the target param data ratio (Chinchilla scaling based on effective params)
+    target_tokens = target_param_data_ratio * effective_params
     num_iterations = target_tokens // total_batch_size
     print0(f"Calculated number of iterations from target data:param ratio: {num_iterations:,}")
 else:
     raise ValueError("No training horizon specified")
 total_tokens = total_batch_size * num_iterations
 print0(f"Total number of training tokens: {total_tokens:,}")
-print0(f"Tokens : Transformer Params ratio: {total_batch_size * num_iterations / transformer_params:.2f}") # Chinchilla is ~20
+print0(f"Tokens : Effective Params ratio: {total_batch_size * num_iterations / effective_params:.2f}") # Chinchilla is ~20
 print0(f"Total training FLOPs estimate: {num_flops_per_token * total_tokens:e}")
 
 # -----------------------------------------------------------------------------
@@ -363,10 +365,11 @@ get_report().log(section="Base model training", data=[
         "Corpus": corpus_name,
         "Number of parameters": num_params,
         "Transformer parameters": transformer_params,
+        "Effective parameters": effective_params,
         "Number of FLOPs per token": f"{num_flops_per_token:e}",
         "Calculated number of iterations": num_iterations,
         "Number of training tokens": total_tokens,
-        "Tokens : Transformer Params ratio": total_batch_size * num_iterations / transformer_params,
+        "Tokens : Effective Params ratio": total_batch_size * num_iterations / effective_params,
         "DDP world size": ddp_world_size,
         "warmup_ratio": warmup_ratio,
         "warmdown_ratio": warmdown_ratio,

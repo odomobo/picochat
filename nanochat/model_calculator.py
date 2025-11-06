@@ -121,8 +121,8 @@ def estimate_training_time(config, effective_params, transformer_params, target_
 
     Args:
         config: GPTConfig object
-        effective_params: Effective parameter count (accounts for tied weights, used for FLOPs)
-        transformer_params: Transformer parameter count (used for Chinchilla scaling)
+        effective_params: Effective parameter count (accounts for tied weights, used for Chinchilla scaling and FLOPs)
+        transformer_params: Transformer parameter count (legacy, kept for backward compatibility)
         target_param_data_ratio: Tokens per parameter (Chinchilla = 20)
         total_batch_size: Total batch size in tokens
 
@@ -134,8 +134,8 @@ def estimate_training_time(config, effective_params, transformer_params, target_
     mfu = 0.50  # Model FLOPs Utilization (50%)
     overhead_minutes = 5  # Fixed overhead per run
 
-    # Calculate training parameters (Chinchilla scaling based on transformer params only)
-    target_tokens = transformer_params * target_param_data_ratio
+    # Calculate training parameters (Chinchilla scaling based on effective params)
+    target_tokens = effective_params * target_param_data_ratio
     num_iterations = int(target_tokens // total_batch_size)
 
     # Calculate FLOPs per token
