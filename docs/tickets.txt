@@ -21,9 +21,9 @@ Status   : PENDING
 ----------
 
 ---------- TICKET 012
-Title    : Add "confidence" head.
+Title    : Add "conviction" head.
 Status   : PENDING
-    Add a scalar confidence head, which is trained based on the difference of expected token embedding and actual embedding.
+    Add a scalar "conviction" head, which is trained based on the dot product of expected token embedding and actual embedding hidden state.
 ---------- TICKET 013
 Title    : Confidence head completion tool
 Status   : PENDING
