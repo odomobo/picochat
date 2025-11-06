@@ -6,29 +6,16 @@ Status   : TESTING
     Need to verify this actually works.
 ----------
 
+---------- TICKET 028
+Title    : Refactor wizards
+Status   : PENDING
+    Both the configuration and the estimate_model_size wizards share a ton in common; refactor out their commonalities (including asking all the same questions, doing the same calculations). Actually, maybe instead of having both, maybe there should be a parameter we can pass to configuration to give it a dry run, so it doesn't actually create the "run".
+----------
+
 ---------- TICKET 018
 Title    : Calculate optimal run sizes
 Status   : PENDING
     Once wandb logging is fixed, it'll be trivial to determine optimal run sizes as long as we do several different runs.
-----------
-
----------- TICKET 004
-Title    : Parameterize activation function
-Status   : PENDING
-    Allow for different activation functions. This should be a string
-    parameter to allow for many different ones
-----------
-
----------- TICKET 005
-Title    : Parameterize attention head size
-Status   : PENDING
-    Allow different attention head sizes
-----------
-
----------- TICKET 006
-Title    : Parameterize FFN expansion ratio
-Status   : PENDING
-    Allow different expansion ratios. Presumably larger expansion ratios (like 6:1) will yield better results (when controlling for total parameter count).
 ----------
 
 ---------- TICKET 020
@@ -70,7 +57,7 @@ Status   : PENDING
     Depends on [012] of course.
 ----------
 
----------- TICKET 028
+---------- TICKET 029
 Title    : 
 Status   : PENDING
 
