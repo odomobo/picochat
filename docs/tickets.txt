@@ -7,9 +7,10 @@ Status   : TESTING
     Need to verify this actually works.
 ----------
 
----------- TICKET 029
-Title    : Actually save num_heads and num_kv_heads in config scripts; propagate them through the system
-Status   : PENDING
+---------- TICKET 015
+Title    : Change default context window size
+Status   : TESTING
+    ... to 1024. Need to perform tests to see if we need any changes in corpus to support this...
 ----------
 
 ---------- TICKET 018
@@ -23,6 +24,11 @@ Title    : Calculate optimal hyperparameters
 Status   : PENDING
 ----------
 
+---------- TICKET 029
+Title    : Actually save num_heads and num_kv_heads in config scripts; propagate them through the system
+Status   : PENDING
+----------
+
 ---------- TICKET 011
 Title    : Create corpus size calculator
 Status   : PENDING
@@ -32,18 +38,11 @@ Title    : Create corpus mixer
 Status   : PENDING
     Script which takes corpora and mixes them by a given ratio.
     Depends on [011]
-----------
-
----------- TICKET 015
-Title    : Change default context window size
+---------- TICKET 033
+Title    : Create "tinystories/fineweb-edu" corpus
 Status   : PENDING
-    ... to 1024. Need to perform tests to see if we need any changes in corpus to support this...
-----------
-
----------- TICKET 017
-Title    : Get "1 billion token challenge" dataset
-Status   : PENDING
-    Get the training corpus. Details here: https://huggingface.co/blog/codelion/optimal-dataset-mixing
+    Mix corpora together, probably 50:50
+    Depends on [012]
 ----------
 
 ---------- TICKET 012
@@ -59,17 +58,19 @@ Status   : PENDING
 
 ---------- TICKET 030
 Title    : Gating
-Status   : PENDING
+Status   : ICEBOX
     Add another parameter, "gated", which when true, adds a separate up_proj matrix which gets element-wise multiplied before going through the down_proj matrix. Maybe it should be named to "gate_signal"
+    Note: simply optimiziation; low priority
 ----------
 
 ---------- TICKET 031
 Title    : Biases
-Status   : PENDING
+Status   : ICEBOX
     Add another parameter, "enable_bias" or something like that, which enables biases for basically all matrices (unless there are any that don't make sense?)
+    Note: simply (potential) optimiziation; low priority
 ----------
 
----------- TICKET 033
+---------- TICKET 034
 Title    : 
 Status   : PENDING
 
