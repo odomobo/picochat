@@ -133,6 +133,16 @@ class Block(nn.Module):
         x = x + self.mlp(norm(x))
         return x
 
+# For now, a conviction head is just a linear transformation
+class ConvictionHead(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.proj = nn.Linear(config.n_embd, 1, bias=False)
+
+    def forward(self, x):
+        x = self.proj(x)
+        return x
+
 
 class GPT(nn.Module):
     def __init__(self, config):
@@ -153,6 +163,9 @@ class GPT(nn.Module):
         # Note: self.output_projection doesn't exist unless use_output_projection is enabled
         if config.use_output_projection:
             self.output_projection = nn.Linear(config.n_embd, config.n_embd, bias=False)
+
+        if config.use_conviction_head:
+            self.conviction_head = ConvictionHead(config)
 
         # To support meta device initialization, we init the rotary embeddings here, but it's fake
         # As for rotary_seq_len, these rotary embeddings are pretty small/cheap in memory,
@@ -267,6 +280,9 @@ class GPT(nn.Module):
             if rank == 0:
                 print(f"Weight tying disabled: using embedding_lr={embedding_lr}, unembedding_lr={unembedding_lr}")
 
+        if self.config.use_conviction_head:
+            adam_groups.append(dict(params=self.conviction_head.parameters(), lr=unembedding_lr * dmodel_lr_scale))
+
         # Create the AdamW optimizer for the embedding (and lm_head if untied)
         adamw_kwargs = dict(betas=(0.8, 0.95), eps=1e-10, weight_decay=weight_decay)
         AdamWFactory = DistAdamW if ddp else partial(torch.optim.AdamW, fused=True)
@@ -301,6 +317,10 @@ class GPT(nn.Module):
         for block in self.transformer.h:
             x = block(x, cos_sin, kv_cache)
         x = norm(x)
+
+        # conviction head is after output to 
+        if self.config.use_conviction_head:
+            conviction = self.conviction_head(x)
 
         if self.config.use_output_projection:
             x = self.output_projection(x)
