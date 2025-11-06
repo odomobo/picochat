@@ -197,6 +197,8 @@ def main(dry_run=False):
     else:
         use_output_projection = False
 
+    use_conviction_head = get_bool_input("Enable conviction head?", default=False)
+
     # Architecture customization
     activation_fn = get_string_input("Activation function (relu_squared, relu, gelu)", default="relu_squared")
     if activation_fn not in ["relu_squared", "relu", "gelu"]:
@@ -262,6 +264,7 @@ def main(dry_run=False):
         n_embd=model_dim,
         tie_weights=tie_weights,
         use_output_projection=use_output_projection,
+        use_conviction_head=use_conviction_head,
         activation_fn=activation_fn,
         head_dim=head_dim,
         ffn_expansion_ratio=ffn_expansion_ratio
@@ -349,6 +352,8 @@ depth = {depth}
 model_dim = {model_dim}  # aspect ratio {model_dim / depth if depth != 0 else 0:.1f} (or custom)
 max_seq_len = {max_seq_len}
 tie_weights = {str(tie_weights)}  # tie wte and lm_head weights (reduces params by ~50%)
+use_output_projection = {use_output_projection}  # output projection layer before lm_head
+use_conviction_head = {use_conviction_head}  # enable conviction head
 activation_fn = "{activation_fn}"  # activation function: relu_squared, relu, gelu
 head_dim = {head_dim}  # attention head dimension
 num_heads = {num_heads}  # number of attention heads
@@ -359,7 +364,6 @@ ffn_expansion_ratio = {ffn_expansion_ratio}  # MLP expansion ratio
 device_batch_size = {device_batch_size}
 total_batch_size = {total_batch_size}
 tied_weights_lr = {tied_weights_lr}  # learning rate for tied weights (when tie_weights=True)
-use_output_projection = {use_output_projection}
 
 # Training horizon
 # Only one of (num_iterations, target_flops, target_param_data_ratio) will be used

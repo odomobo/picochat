@@ -68,6 +68,10 @@ def _backward_compatibility(model_config_kwargs):
         model_config_kwargs["use_output_projection"] = False
         log0("Warning: use_output_projection not found in checkpoint metadata, assuming False (old untied model)")
 
+    if "use_conviction_head" not in model_config_kwargs:
+        model_config_kwargs["use_conviction_head"] = False
+        log0("Warning: use_conviction_head not found in checkpoint metadata, assuming False (old behavior)")
+
     if "activation_fn" not in model_config_kwargs:
         model_config_kwargs["activation_fn"] = "relu_squared"
         log0("Warning: activation_fn not found in checkpoint metadata, assuming relu_squared (old behavior)")
