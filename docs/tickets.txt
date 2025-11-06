@@ -69,11 +69,6 @@ Status   : PENDING
     Add another parameter, "enable_bias" or something like that, which enables biases for basically all matrices (unless there are any that don't make sense?)
 ----------
 
----------- TICKET 032
-Title    : Cleanup config script output
-Status   : PENDING
-----------
-
 ---------- TICKET 033
 Title    : 
 Status   : PENDING
