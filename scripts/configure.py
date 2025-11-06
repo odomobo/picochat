@@ -182,8 +182,7 @@ def main(dry_run=False):
 
     # Ask questions with defaults
     depth = get_int_input("Model depth (number of transformer layers)", default=4)
-    default_model_dim = 512
-    model_dim = get_int_input(f"Model dim (embedding dimension)", default=default_model_dim)
+    model_dim = get_int_input(f"Model dim (embedding dimension)", default=256)
     tie_weights = get_bool_input("Tie embedding weights (wte and lm_head)? Reduces params by ~50%", default=True)
 
     # Only ask for tied_weights_lr if tie_weights is enabled
@@ -203,7 +202,7 @@ def main(dry_run=False):
     if activation_fn not in ["relu_squared", "relu", "gelu"]:
         print(f"WARNING: Unknown activation function '{activation_fn}'. Proceeding anyway, but this may cause errors.")
 
-    head_dim = get_int_input("Attention head dimension", default=128)
+    head_dim = get_int_input("Attention head dimension", default=64)
     # Warn if model_dim is not divisible by head_dim
     if model_dim % head_dim != 0:
         print(f"WARNING: model_dim ({model_dim}) is not divisible by head_dim ({head_dim}).")
@@ -219,7 +218,7 @@ def main(dry_run=False):
         print(f"         Suggested: model_dim={model_dim}, ffn_expansion_ratio={128 * round(intermediate_dim / 128) / model_dim:.2f}")
     print()
 
-    max_seq_len = get_int_input("Max sequence length (context window)", default=2048)
+    max_seq_len = get_int_input("Max sequence length (context window)", default=1024)
     target_param_data_ratio = get_int_input("Target param:data ratio (Chinchilla=20, -1=explicit iterations)", default=20)
     device_batch_size = get_int_input("Device batch size (sequences per GPU)", default=32)
     total_batch_size = get_int_input("Total batch size (tokens)", default=524288)
