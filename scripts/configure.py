@@ -368,7 +368,7 @@ target_flops = -1.0  # calculate iterations to reach target FLOPs (-1 = disabled
 target_param_data_ratio = {target_param_data_ratio}  # Chinchilla scaling (20 = 20 tokens per effective parameter)
 
 # Derived values (calculated from config above):
-# num_heads = max(1, (model_dim + head_dim - 1) // head_dim) = {num_heads}
+# num_heads = model_dim // head_dim = {num_heads}
 # intermediate_dim = int(model_dim * ffn_expansion_ratio) = {intermediate_dim}
 # tokens_per_fwdbwd = device_batch_size * max_seq_len = {tokens_per_fwdbwd:,}
 # grad_accum_steps = total_batch_size // tokens_per_fwdbwd = {grad_accum_steps}
