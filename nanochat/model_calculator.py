@@ -6,7 +6,7 @@ Provides functions to:
 2. Estimate FLOPs per token
 3. Estimate training time on RTX 3090
 
-This module is used by scripts/estimate_model_size.py and scripts/configure.py
+This module is used by scripts/configure.py
 """
 
 

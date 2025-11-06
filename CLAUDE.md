@@ -348,8 +348,7 @@ scripts/            # Entry point scripts
   base_complete.py  # Model completion utility
   tok_train.py      # Train tokenizer
   tok_eval.py       # Evaluate tokenizer
-  configure.py      # Configuration wizard for experiments
-  estimate_model_size.py  # Model size calculator
+  configure.py      # Configuration wizard for experiments (use --dry-run for model size estimates)
   run_init.sh       # Initialize new experiment run
   run_set.sh        # Switch to existing experiment run
   run_start.sh      # Start training run

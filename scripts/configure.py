@@ -5,9 +5,11 @@ Creates a config.py file in the current NANOCHAT_RUN_DIR with training parameter
 Asks interactive questions with sensible defaults and performs basic validation.
 
 Usage:
-    python -m scripts.configure
+    python -m scripts.configure              # Normal mode: create config.py
+    python -m scripts.configure --dry-run    # Dry-run mode: just show estimates
 """
 
+import argparse
 import os
 import sys
 
@@ -70,96 +72,113 @@ def get_bool_input(prompt, default):
         print(f"  ERROR: Please enter 'y' or 'n'")
 
 
-def main():
-    """Run the interactive configuration wizard."""
+def main(dry_run=False):
+    """Run the interactive configuration wizard.
 
-    # Check that NANOCHAT_RUN_DIR is set
-    run_dir = os.environ.get("NANOCHAT_RUN_DIR")
-    if not run_dir:
-        print("ERROR: NANOCHAT_RUN_DIR environment variable is not set")
-        print("Please run: source scripts/run_init.sh <run_name>")
-        sys.exit(1)
+    Args:
+        dry_run: If True, skip run directory checks and file writing, just display estimates
+    """
 
-    # Check if config.py already exists
-    config_path = os.path.join(run_dir, "config.py")
-    if os.path.exists(config_path):
-        print(f"ERROR: Configuration file already exists: {config_path}")
-        print("This run has already been configured.")
-        print("To reconfigure, delete the existing config file or choose a different run name.")
-        sys.exit(1)
+    run_dir = None
+    config_path = None
+
+    if not dry_run:
+        # Check that NANOCHAT_RUN_DIR is set
+        run_dir = os.environ.get("NANOCHAT_RUN_DIR")
+        if not run_dir:
+            print("ERROR: NANOCHAT_RUN_DIR environment variable is not set")
+            print("Please run: source scripts/run_init.sh <run_name>")
+            sys.exit(1)
+
+        # Check if config.py already exists
+        config_path = os.path.join(run_dir, "config.py")
+        if os.path.exists(config_path):
+            print(f"ERROR: Configuration file already exists: {config_path}")
+            print("This run has already been configured.")
+            print("To reconfigure, delete the existing config file or choose a different run name.")
+            sys.exit(1)
 
     print("=" * 80)
-    print("nanochat Configuration Wizard")
+    if dry_run:
+        print("nanochat Model Size & Training Time Estimation")
+    else:
+        print("nanochat Configuration Wizard")
     print("=" * 80)
-    print(f"Creating configuration for: {run_dir}")
-    print()
+    if not dry_run:
+        print(f"Creating configuration for: {run_dir}")
+        print()
     print("This wizard will ask questions about your training run.")
     print("Press Enter to accept defaults shown in brackets.")
     print("=" * 80)
     print()
 
-    # Get run name from environment or ask user
-    wandb_run = os.environ.get("WANDB_RUN")
-    if wandb_run:
-        print(f"Using run name from environment: {wandb_run}")
-        run_name = wandb_run
-    else:
-        run_name = get_string_input("Run name (for wandb logging)", default="dummy")
-    print()
+    # Get run name and corpus (only if not dry-run)
+    run_name = None
+    corpus_name = None
 
-    # Corpus selection - scan base_data directory for available corpora
-    data_dir = os.environ.get("NANOCHAT_DATA_DIR")
-    if not data_dir:
-        print("ERROR: NANOCHAT_DATA_DIR environment variable is not set")
-        print("Please run: source scripts/run_init.sh <run_name>")
-        sys.exit(1)
+    if not dry_run:
+        # Get run name from environment or ask user
+        wandb_run = os.environ.get("WANDB_RUN")
+        if wandb_run:
+            print(f"Using run name from environment: {wandb_run}")
+            run_name = wandb_run
+        else:
+            run_name = get_string_input("Run name (for wandb logging)", default="dummy")
+        print()
 
-    base_data_dir = os.path.join(data_dir, "base_data")
-    if not os.path.exists(base_data_dir):
-        print(f"ERROR: Base data directory not found: {base_data_dir}")
-        print("Please download or organize pretraining data first.")
-        sys.exit(1)
+        # Corpus selection - scan base_data directory for available corpora
+        data_dir = os.environ.get("NANOCHAT_DATA_DIR")
+        if not data_dir:
+            print("ERROR: NANOCHAT_DATA_DIR environment variable is not set")
+            print("Please run: source scripts/run_init.sh <run_name>")
+            sys.exit(1)
 
-    # Find all subdirectories containing .parquet files
-    available_corpora = []
-    for item in os.listdir(base_data_dir):
-        corpus_path = os.path.join(base_data_dir, item)
-        if os.path.isdir(corpus_path):
-            # Check if this directory contains any .parquet files
-            parquet_files = [f for f in os.listdir(corpus_path) if f.endswith('.parquet')]
-            if parquet_files:
-                available_corpora.append((item, len(parquet_files)))
+        base_data_dir = os.path.join(data_dir, "base_data")
+        if not os.path.exists(base_data_dir):
+            print(f"ERROR: Base data directory not found: {base_data_dir}")
+            print("Please download or organize pretraining data first.")
+            sys.exit(1)
 
-    if not available_corpora:
-        print(f"ERROR: No corpora found in {base_data_dir}")
-        print("Expected structure: {base_data_dir}/{{corpus_name}}/*.parquet")
-        print("Please organize your pretraining data into corpus subdirectories.")
-        sys.exit(1)
+        # Find all subdirectories containing .parquet files
+        available_corpora = []
+        for item in os.listdir(base_data_dir):
+            corpus_path = os.path.join(base_data_dir, item)
+            if os.path.isdir(corpus_path):
+                # Check if this directory contains any .parquet files
+                parquet_files = [f for f in os.listdir(corpus_path) if f.endswith('.parquet')]
+                if parquet_files:
+                    available_corpora.append((item, len(parquet_files)))
 
-    # Present corpus options
-    print("Available pretraining corpora:")
-    for idx, (corpus_name, num_shards) in enumerate(available_corpora, 1):
-        print(f"  {idx}. {corpus_name} ({num_shards} shards)")
-    print()
+        if not available_corpora:
+            print(f"ERROR: No corpora found in {base_data_dir}")
+            print("Expected structure: {base_data_dir}/{{corpus_name}}/*.parquet")
+            print("Please organize your pretraining data into corpus subdirectories.")
+            sys.exit(1)
 
-    # Select corpus
-    if len(available_corpora) == 1:
-        corpus_name = available_corpora[0][0]
-        print(f"Auto-selected corpus: {corpus_name}")
-    else:
-        while True:
-            response = input(f"Select corpus [1-{len(available_corpora)}]: ").strip()
-            try:
-                selection = int(response)
-                if 1 <= selection <= len(available_corpora):
-                    corpus_name = available_corpora[selection - 1][0]
-                    print(f"Selected corpus: {corpus_name}")
-                    break
-                else:
-                    print(f"  ERROR: Please enter a number between 1 and {len(available_corpora)}")
-            except ValueError:
-                print(f"  ERROR: Please enter a valid number")
-    print()
+        # Present corpus options
+        print("Available pretraining corpora:")
+        for idx, (corpus_name_item, num_shards) in enumerate(available_corpora, 1):
+            print(f"  {idx}. {corpus_name_item} ({num_shards} shards)")
+        print()
+
+        # Select corpus
+        if len(available_corpora) == 1:
+            corpus_name = available_corpora[0][0]
+            print(f"Auto-selected corpus: {corpus_name}")
+        else:
+            while True:
+                response = input(f"Select corpus [1-{len(available_corpora)}]: ").strip()
+                try:
+                    selection = int(response)
+                    if 1 <= selection <= len(available_corpora):
+                        corpus_name = available_corpora[selection - 1][0]
+                        print(f"Selected corpus: {corpus_name}")
+                        break
+                    else:
+                        print(f"  ERROR: Please enter a number between 1 and {len(available_corpora)}")
+                except ValueError:
+                    print(f"  ERROR: Please enter a valid number")
+        print()
 
     # Ask questions with defaults
     depth = get_int_input("Model depth (number of transformer layers)", default=4)
@@ -232,7 +251,13 @@ def main():
         sys.exit(1)
 
     # Calculate derived architecture values and model size
-    vocab_size = 24576  # 3 * 2^13, appropriate for tiny models
+    if dry_run:
+        # In dry-run mode, ask for vocab_size
+        vocab_size = get_int_input("Vocab size", default=24576)
+    else:
+        # In normal mode, use fixed vocab_size for consistency
+        vocab_size = 24576  # 3 * 2^13, appropriate for tiny models
+
     num_heads = model_dim // head_dim
     num_kv_heads = num_heads  # always match
 
@@ -312,7 +337,12 @@ def main():
     print(f"  Estimated training time:     {hours}:{minutes:02d}")
     print()
 
-    # Generate config file content
+    if dry_run:
+        # In dry-run mode, we're done - just exit
+        print("=" * 80)
+        return
+
+    # Generate config file content (only in normal mode)
     config_content = f"""# nanochat training configuration
 # Generated by configuration wizard
 # Run directory: {run_dir}
@@ -368,4 +398,11 @@ target_param_data_ratio = {target_param_data_ratio}  # Chinchilla scaling (20 = 
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="nanochat configuration wizard")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Dry-run mode: show model size and training estimates without creating config.py"
+    )
+    args = parser.parse_args()
+    main(dry_run=args.dry_run)
