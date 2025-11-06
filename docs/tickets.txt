@@ -6,11 +6,6 @@ Status   : TESTING
     Need to verify this actually works.
 ----------
 
----------- TICKET 027
-Title    : Claude should ask questions for each iteration of working on ticket, if applicable
-Status   : PENDING
-----------
-
 ---------- TICKET 019
 Title    : Save "transformer" parameter size in report
 Status   : PENDING
