@@ -13,5 +13,5 @@ https://arxiv.org/abs/1608.05859
 ## To analyze: why weight tying should conceptually be reasonable
 Why and when tying embedding (a story)
 https://www.reddit.com/r/MachineLearning/comments/1eqm0lr/r_why_and_when_tying_embedding_a_story/
-Note: there's also an associated paper, so I should probably reference it.
+Note: there's also an associated paper, so I should probably reference it once I make sense of it. https://openreview.net/forum?id=yyYMAprcAR
 
