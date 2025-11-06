@@ -47,6 +47,8 @@ tie_weights = False # tie wte and lm_head weights (reduces params by ~50%, backw
 use_output_projection = False # output projection layer to reduce the limitations of tiny language models when working with tied weights
 activation_fn = "relu_squared" # activation function: relu_squared, relu, gelu
 head_dim = 128 # attention head dimension
+num_heads = -1 # number of attention heads (-1 = derive from model_dim // head_dim)
+num_kv_heads = -1 # number of key/value heads (-1 = same as num_heads, for MQA/GQA)
 ffn_expansion_ratio = 4.0 # MLP expansion ratio (intermediate_dim = model_dim * ffn_expansion_ratio)
 # Training horizon. Only one of these 3 will be used, in this order of precedence.
 num_iterations = -1 # explicit number of steps of the optimization (-1 = disable)
@@ -123,20 +125,11 @@ print0(f"Vocab size: {vocab_size:,}")
 # Model kwargs are derived from the desired depth of the model
 num_layers = depth
 
-# Calculate derived values for display (not passed to config)
-num_heads = model_dim // head_dim
-num_kv_heads = num_heads  # always match
-
-# Warn if model_dim is not divisible by head_dim
-if model_dim % head_dim != 0:
-    print0(f"WARNING: model_dim ({model_dim}) is not divisible by head_dim ({head_dim}).")
-    print0(f"         This will result in wasted dimensions in attention heads ({num_heads * head_dim} used vs {model_dim} available).")
-
-# Warn if FFN intermediate dimension isn't a multiple of 128
-intermediate_dim = int(model_dim * ffn_expansion_ratio)
-if intermediate_dim % 128 != 0:
-    print0(f"WARNING: FFN intermediate dimension ({intermediate_dim}) is not a multiple of 128.")
-    print0(f"         This may cause GPU inefficiencies.")
+# Backward compatibility: calculate num_heads and num_kv_heads if not provided
+if num_heads == -1:
+    num_heads = model_dim // head_dim
+if num_kv_heads == -1:
+    num_kv_heads = num_heads
 
 print0(f"num_layers: {num_layers}")
 print0(f"model_dim: {model_dim}")

@@ -351,6 +351,8 @@ max_seq_len = {max_seq_len}
 tie_weights = {str(tie_weights)}  # tie wte and lm_head weights (reduces params by ~50%)
 activation_fn = "{activation_fn}"  # activation function: relu_squared, relu, gelu
 head_dim = {head_dim}  # attention head dimension
+num_heads = {num_heads}  # number of attention heads
+num_kv_heads = {num_kv_heads}  # number of key/value heads (for MQA/GQA)
 ffn_expansion_ratio = {ffn_expansion_ratio}  # MLP expansion ratio
 
 # Optimization
@@ -367,7 +369,6 @@ target_flops = -1.0  # calculate iterations to reach target FLOPs (-1 = disabled
 target_param_data_ratio = {target_param_data_ratio}  # Chinchilla scaling (20 = 20 tokens per effective parameter)
 
 # Derived values (calculated from config above):
-# num_heads = model_dim // head_dim = {num_heads}
 # intermediate_dim = int(model_dim * ffn_expansion_ratio) = {intermediate_dim}
 # tokens_per_fwdbwd = device_batch_size * max_seq_len = {tokens_per_fwdbwd:,}
 # grad_accum_steps = total_batch_size // tokens_per_fwdbwd = {grad_accum_steps}
