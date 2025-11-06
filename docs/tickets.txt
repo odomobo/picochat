@@ -1,12 +1,4 @@
 
----------- TICKET 001
-Title    : TinyStories Corpus
-Status   : TESTING
-    Need to be able to select corpus in config wizard.
-    No backwards compat required.
-    Need to verify this actually works.
-----------
-
 ---------- TICKET 015
 Title    : Change default context window size
 Status   : TESTING
