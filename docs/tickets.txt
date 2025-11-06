@@ -1,9 +1,4 @@
 
----------- TICKET 020
-Title    : Calculate optimal hyperparameters
-Status   : PENDING
-----------
-
 ---------- TICKET 029
 Title    : Actually save num_heads and num_kv_heads in config scripts; propagate them through the system
 Status   : PENDING
@@ -54,6 +49,11 @@ Status   : ICEBOX
 Title    : Calculate optimal run sizes
 Status   : ICEBOX
     Once wandb logging is fixed, it'll be trivial to determine optimal run sizes as long as we do several different runs.
+----------
+
+---------- TICKET 020
+Title    : Calculate optimal hyperparameters
+Status   : ICEBOX
 ----------
 
 ---------- TICKET 034
