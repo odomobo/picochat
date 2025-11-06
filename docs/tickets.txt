@@ -1,4 +1,12 @@
 
+---------- TICKET 001
+Title    : TinyStories Corpus
+Status   : TESTING
+    Need to be able to select corpus in config wizard.
+    No backwards compat required.
+    Need to verify this actually works.
+----------
+
 ---------- TICKET 029
 Title    : Actually save num_heads and num_kv_heads in config scripts; propagate them through the system
 Status   : PENDING
@@ -36,14 +44,6 @@ Status   : PENDING
 Title    : Get "1 billion token challenge" dataset
 Status   : PENDING
     Get the training corpus. Details here: https://huggingface.co/blog/codelion/optimal-dataset-mixing
-----------
-
----------- TICKET 001
-Title    : TinyStories Corpus
-Status   : TESTING - ON HOLD
-    Need to be able to select corpus in config wizard.
-    No backwards compat required.
-    Need to verify this actually works.
 ----------
 
 ---------- TICKET 012
