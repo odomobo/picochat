@@ -186,30 +186,6 @@ def main(dry_run=False):
     model_dim = get_int_input(f"Model dim (embedding dimension)", default=default_model_dim)
     tie_weights = get_bool_input("Tie embedding weights (wte and lm_head)? Reduces params by ~50%", default=True)
 
-    # Architecture customization
-    print()
-    print("Advanced architecture options:")
-    activation_fn = get_string_input("Activation function (relu_squared, relu, gelu)", default="relu_squared")
-    if activation_fn not in ["relu_squared", "relu", "gelu"]:
-        print(f"WARNING: Unknown activation function '{activation_fn}'. Proceeding anyway, but this may cause errors.")
-
-    head_dim = get_int_input("Attention head dimension", default=128)
-    ffn_expansion_ratio = get_float_input("FFN expansion ratio (intermediate_dim = model_dim * ratio)", default=4.0)
-
-    # Warn if model_dim is not divisible by head_dim
-    if model_dim % head_dim != 0:
-        print(f"WARNING: model_dim ({model_dim}) is not divisible by head_dim ({head_dim}).")
-        print(f"         This will result in wasted dimensions in attention heads.")
-        print(f"         Suggested: Use head_dim that divides model_dim evenly.")
-
-    # Warn if intermediate dimension isn't a multiple of 128
-    intermediate_dim = int(model_dim * ffn_expansion_ratio)
-    if intermediate_dim % 128 != 0:
-        print(f"WARNING: FFN intermediate dimension ({intermediate_dim}) is not a multiple of 128.")
-        print(f"         This may cause GPU inefficiencies. Consider adjusting model_dim or ffn_expansion_ratio.")
-        print(f"         Suggested: model_dim={model_dim}, ffn_expansion_ratio={128 * round(intermediate_dim / 128) / model_dim:.2f}")
-    print()
-
     # Only ask for tied_weights_lr if tie_weights is enabled
     if tie_weights:
         tied_weights_lr = get_float_input("Learning rate for tied weights (standard: 0.02)", default=0.02)
@@ -222,15 +198,31 @@ def main(dry_run=False):
     else:
         use_output_projection = False
 
-    device_batch_size = get_int_input("Device batch size (sequences per GPU)", default=32)
-    target_param_data_ratio = get_int_input("Target param:data ratio (Chinchilla=20, -1=explicit iterations)", default=20)
-    total_batch_size = get_int_input("Total batch size (tokens)", default=524288)
-    max_seq_len = get_int_input("Max sequence length (context window)", default=2048)
+    # Architecture customization
+    activation_fn = get_string_input("Activation function (relu_squared, relu, gelu)", default="relu_squared")
+    if activation_fn not in ["relu_squared", "relu", "gelu"]:
+        print(f"WARNING: Unknown activation function '{activation_fn}'. Proceeding anyway, but this may cause errors.")
 
+    head_dim = get_int_input("Attention head dimension", default=128)
+    # Warn if model_dim is not divisible by head_dim
+    if model_dim % head_dim != 0:
+        print(f"WARNING: model_dim ({model_dim}) is not divisible by head_dim ({head_dim}).")
+        print(f"         This will result in wasted dimensions in attention heads.")
+        print(f"         Suggested: Use head_dim that divides model_dim evenly.")
+
+    ffn_expansion_ratio = get_float_input("FFN expansion ratio (intermediate_dim = model_dim * ratio)", default=4.0)
+    # Warn if intermediate dimension isn't a multiple of 128
+    intermediate_dim = int(model_dim * ffn_expansion_ratio)
+    if intermediate_dim % 128 != 0:
+        print(f"WARNING: FFN intermediate dimension ({intermediate_dim}) is not a multiple of 128.")
+        print(f"         This may cause GPU inefficiencies. Consider adjusting model_dim or ffn_expansion_ratio.")
+        print(f"         Suggested: model_dim={model_dim}, ffn_expansion_ratio={128 * round(intermediate_dim / 128) / model_dim:.2f}")
     print()
-    print("=" * 80)
-    print("Validating configuration...")
-    print("=" * 80)
+
+    max_seq_len = get_int_input("Max sequence length (context window)", default=2048)
+    target_param_data_ratio = get_int_input("Target param:data ratio (Chinchilla=20, -1=explicit iterations)", default=20)
+    device_batch_size = get_int_input("Device batch size (sequences per GPU)", default=32)
+    total_batch_size = get_int_input("Total batch size (tokens)", default=524288)
 
     # Validate batch size divisibility
     if not validate_batch_size(device_batch_size, total_batch_size, max_seq_len):
