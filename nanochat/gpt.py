@@ -46,10 +46,10 @@ class CausalSelfAttention(nn.Module):
         self.layer_idx = layer_idx
         self.n_embd = config.n_embd
         self.head_dim = config.head_dim
-        # Calculate n_head from n_embd and head_dim (don't use config.n_head)
+        # Calculate n_head from n_embd and head_dim
         self.n_head = self.n_embd // self.head_dim
-        self.n_kv_head = config.n_kv_head
-        assert self.n_kv_head <= self.n_head and self.n_head % self.n_kv_head == 0
+        # n_kv_head always matches n_head (no MQA/GQA)
+        self.n_kv_head = self.n_head
         self.c_q = nn.Linear(self.n_embd, self.n_head * self.head_dim, bias=False)
         self.c_k = nn.Linear(self.n_embd, self.n_kv_head * self.head_dim, bias=False)
         self.c_v = nn.Linear(self.n_embd, self.n_kv_head * self.head_dim, bias=False)
@@ -161,8 +161,7 @@ class GPT(nn.Module):
         # so let's just over-compute them, but assert fail if we ever reach that amount.
         # In the future we can dynamically grow the cache, for now it's fine.
         self.rotary_seq_len = config.sequence_len * 10 # 10X over-compute should be enough, TODO make nicer?
-        head_dim = config.n_embd // config.n_head
-        cos, sin = self._precompute_rotary_embeddings(self.rotary_seq_len, head_dim)
+        cos, sin = self._precompute_rotary_embeddings(self.rotary_seq_len, config.head_dim)
         self.register_buffer("cos", cos, persistent=False) # persistent=False means it's not saved to the checkpoint
         self.register_buffer("sin", sin, persistent=False)
 
@@ -184,8 +183,7 @@ class GPT(nn.Module):
         # It's initialized by self.apply(self._init_weights) above
 
         # init the rotary embeddings
-        head_dim = self.config.n_embd // self.config.n_head
-        cos, sin = self._precompute_rotary_embeddings(self.rotary_seq_len, head_dim)
+        cos, sin = self._precompute_rotary_embeddings(self.rotary_seq_len, self.config.head_dim)
         self.cos, self.sin = cos, sin
         # Cast the embeddings from fp32 to bf16: optim can tolerate it and it saves memory: both in the model and the activations
         if self.transformer.wte.weight.device.type == "cuda":

@@ -122,8 +122,10 @@ print0(f"Vocab size: {vocab_size:,}")
 
 # Model kwargs are derived from the desired depth of the model
 num_layers = depth
-num_heads = max(1, (model_dim + head_dim - 1) // head_dim) # ceiling division: model_dim / head_dim
-num_kv_heads = num_heads # default is 1:1 GQA (Group Query Attention) ratio (i.e. GQA is disabled)
+
+# Calculate derived values for display (not passed to config)
+num_heads = model_dim // head_dim
+num_kv_heads = num_heads  # always match
 
 # Warn if model_dim is not divisible by head_dim
 if model_dim % head_dim != 0:
@@ -153,7 +155,7 @@ print0(f"Tokens / micro-batch: {world_tokens_per_fwdbwd:,}")
 print0(f"Total batch size {total_batch_size:,} => gradient accumulation steps: {grad_accum_steps}")
 # -----------------------------------------------------------------------------
 # Initialize the Model
-model_config_kwargs = dict(sequence_len=max_seq_len, vocab_size=vocab_size, n_layer=num_layers, n_head=num_heads, n_kv_head=num_kv_heads, n_embd=model_dim, tie_weights=tie_weights, use_output_projection=use_output_projection, activation_fn=activation_fn, head_dim=head_dim, ffn_expansion_ratio=ffn_expansion_ratio)
+model_config_kwargs = dict(sequence_len=max_seq_len, vocab_size=vocab_size, n_layer=num_layers, n_embd=model_dim, tie_weights=tie_weights, use_output_projection=use_output_projection, activation_fn=activation_fn, head_dim=head_dim, ffn_expansion_ratio=ffn_expansion_ratio)
 with torch.device("meta"):
     model_config = GPTConfig(**model_config_kwargs)
     model = GPT(model_config)

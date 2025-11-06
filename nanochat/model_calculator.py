@@ -23,9 +23,10 @@ def calculate_model_size(config):
     depth = config.n_layer
     model_dim = config.n_embd
     vocab_size = config.vocab_size
-    num_heads = config.n_head
-    num_kv_heads = config.n_kv_head
-    head_dim = model_dim // num_heads
+    head_dim = config.head_dim
+    # Calculate num_heads from model_dim and head_dim
+    num_heads = model_dim // head_dim
+    num_kv_heads = num_heads  # always match
 
     # Calculate parameter counts
     # Embeddings
@@ -108,8 +109,8 @@ def estimate_flops_per_token(config, effective_params):
     """
     nparams_embedding = config.vocab_size * config.n_embd
     l = config.n_layer
-    h = config.n_head
-    q = config.n_embd // config.n_head
+    h = config.n_embd // config.head_dim  # num_heads
+    q = config.head_dim
     t = config.sequence_len
 
     num_flops_per_token = 6 * (effective_params - nparams_embedding) + 12 * l * h * q * t

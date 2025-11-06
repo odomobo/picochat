@@ -104,13 +104,12 @@ def main():
     total_batch_size = get_int_input("Total batch size (tokens)", default=524288)
 
     # Create config
-    num_heads = max(1, (model_dim + head_dim - 1) // head_dim)  # ceiling division
+    num_heads = model_dim // head_dim
+    num_kv_heads = num_heads  # always match
     config = GPTConfig(
         sequence_len=max_seq_len,
         vocab_size=vocab_size,
         n_layer=depth,
-        n_head=num_heads,
-        n_kv_head=num_heads,
         n_embd=model_dim,
         tie_weights=tie_weights,
         use_output_projection=use_output_projection,

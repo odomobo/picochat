@@ -233,15 +233,14 @@ def main():
 
     # Calculate derived architecture values and model size
     vocab_size = 24576  # 3 * 2^13, appropriate for tiny models
-    num_heads = max(1, (model_dim + head_dim - 1) // head_dim)  # ceiling division
+    num_heads = model_dim // head_dim
+    num_kv_heads = num_heads  # always match
 
     # Create GPTConfig and calculate model size
     config = GPTConfig(
         sequence_len=max_seq_len,
         vocab_size=vocab_size,
         n_layer=depth,
-        n_head=num_heads,
-        n_kv_head=num_heads,
         n_embd=model_dim,
         tie_weights=tie_weights,
         use_output_projection=use_output_projection,
