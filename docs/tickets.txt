@@ -26,7 +26,7 @@ Status   : PENDING
 ---------- TICKET 011
 Title    : Create corpus size calculator
 Status   : PENDING
-    Calculates corpus size in tokens. Creates .meta file for each parquet file which caches the token size for quick lookup. The meta file captures the timestamp of the parquet file, and if they don't match, then the meta file is recalculated.
+    Calculates corpus size in tokens. Creates .meta.json file for each parquet file which caches the token size for quick lookup. The meta file captures the timestamp of the parquet file, and if they don't match, then the meta file is recalculated.
 ---------- TICKET 010
 Title    : Create corpus mixer
 Status   : PENDING
