@@ -266,7 +266,6 @@ class GPT(nn.Module):
             adam_groups = [
                 dict(params=embedding_params, lr=tied_weights_lr * dmodel_lr_scale),
             ]
-            assert len(list(self.parameters())) == len(matrix_params) + len(embedding_params)
             if rank == 0:
                 print(f"Weight tying enabled: using tied_weights_lr={tied_weights_lr}")
         else:
@@ -276,12 +275,18 @@ class GPT(nn.Module):
                 dict(params=lm_head_params, lr=unembedding_lr * dmodel_lr_scale),
                 dict(params=embedding_params, lr=embedding_lr * dmodel_lr_scale),
             ]
-            assert len(list(self.parameters())) == len(matrix_params) + len(embedding_params) + len(lm_head_params)
             if rank == 0:
                 print(f"Weight tying disabled: using embedding_lr={embedding_lr}, unembedding_lr={unembedding_lr}")
 
         if self.config.use_conviction_head:
             adam_groups.append(dict(params=self.conviction_head.parameters(), lr=unembedding_lr * dmodel_lr_scale))
+
+        muon_parameters_count = len(matrix_params)
+        adam_parameters_count = 0
+        for adam_group in adam_groups:
+            adam_parameter_count += len(adam_group['params'])
+
+        assert len(list(self.parameters())) == muon_parameters_count + adam_parameters_count
 
         # Create the AdamW optimizer for the embedding (and lm_head if untied)
         adamw_kwargs = dict(betas=(0.8, 0.95), eps=1e-10, weight_decay=weight_decay)
