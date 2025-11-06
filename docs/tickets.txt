@@ -6,13 +6,8 @@ Status   : TESTING
     Need to verify this actually works.
 ----------
 
----------- TICKET 025
-Title    : wandb log total tokens so far
-Status   : PENDING
-----------
-
----------- TICKET 026
-Title    : wandb put benchmarks in its own folder
+---------- TICKET 027
+Title    : Claude should ask questions for each iteration of working on ticket, if applicable
 Status   : PENDING
 ----------
 
@@ -85,7 +80,7 @@ Status   : PENDING
     Depends on [012] of course.
 ----------
 
----------- TICKET 027
+---------- TICKET 028
 Title    : 
 Status   : PENDING
 
