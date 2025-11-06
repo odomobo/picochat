@@ -80,15 +80,6 @@ def _backward_compatibility(model_config_kwargs):
         model_config_kwargs["ffn_expansion_ratio"] = 4.0
         log0("Warning: ffn_expansion_ratio not found in checkpoint metadata, assuming 4.0 (old behavior)")
 
-    # Remove n_head and n_kv_head if they exist (old checkpoints)
-    # These are now derived from n_embd and head_dim
-    if "n_head" in model_config_kwargs:
-        del model_config_kwargs["n_head"]
-        log0("Warning: n_head found in checkpoint metadata, removing (now derived from n_embd and head_dim)")
-
-    if "n_kv_head" in model_config_kwargs:
-        del model_config_kwargs["n_kv_head"]
-        log0("Warning: n_kv_head found in checkpoint metadata, removing (now always equals n_head)")
 
     return model_config_kwargs
 

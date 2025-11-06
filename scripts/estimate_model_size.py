@@ -110,6 +110,8 @@ def main():
         sequence_len=max_seq_len,
         vocab_size=vocab_size,
         n_layer=depth,
+        n_head=num_heads,
+        n_kv_head=num_kv_heads,
         n_embd=model_dim,
         tie_weights=tie_weights,
         use_output_projection=use_output_projection,

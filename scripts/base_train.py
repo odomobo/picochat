@@ -155,7 +155,7 @@ print0(f"Tokens / micro-batch: {world_tokens_per_fwdbwd:,}")
 print0(f"Total batch size {total_batch_size:,} => gradient accumulation steps: {grad_accum_steps}")
 # -----------------------------------------------------------------------------
 # Initialize the Model
-model_config_kwargs = dict(sequence_len=max_seq_len, vocab_size=vocab_size, n_layer=num_layers, n_embd=model_dim, tie_weights=tie_weights, use_output_projection=use_output_projection, activation_fn=activation_fn, head_dim=head_dim, ffn_expansion_ratio=ffn_expansion_ratio)
+model_config_kwargs = dict(sequence_len=max_seq_len, vocab_size=vocab_size, n_layer=num_layers, n_head=num_heads, n_kv_head=num_kv_heads, n_embd=model_dim, tie_weights=tie_weights, use_output_projection=use_output_projection, activation_fn=activation_fn, head_dim=head_dim, ffn_expansion_ratio=ffn_expansion_ratio)
 with torch.device("meta"):
     model_config = GPTConfig(**model_config_kwargs)
     model = GPT(model_config)

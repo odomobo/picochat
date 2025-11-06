@@ -44,12 +44,10 @@ class CausalSelfAttention(nn.Module):
     def __init__(self, config, layer_idx):
         super().__init__()
         self.layer_idx = layer_idx
+        self.n_head = config.n_head
+        self.n_kv_head = config.n_kv_head
         self.n_embd = config.n_embd
         self.head_dim = config.head_dim
-        # Calculate n_head from n_embd and head_dim
-        self.n_head = self.n_embd // self.head_dim
-        # n_kv_head always matches n_head (no MQA/GQA)
-        self.n_kv_head = self.n_head
         self.c_q = nn.Linear(self.n_embd, self.n_head * self.head_dim, bias=False)
         self.c_k = nn.Linear(self.n_embd, self.n_kv_head * self.head_dim, bias=False)
         self.c_v = nn.Linear(self.n_embd, self.n_kv_head * self.head_dim, bias=False)
