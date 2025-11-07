@@ -1,4 +1,15 @@
 
+---------- TICKET 040
+Title    : add conviction support to base_complete
+Status   : PENDING
+    In the future, we will be creating a full tool around this, but in the meantime, we will be implementing logic in base_complete to show the conviction rate per token. It'll be triggered by a new terminator, "@@@". When "###" is used, the current logic will work as-is. When "@@@" is used, then this will happen:
+
+    1. It won't start with the user-completed prompt in dark gray. Instead, it will stream one token per line, using the following template:
+tok     | 0.1234
+    So, as you can see, it will be the token, padded by 8 spaces, then a delimiting pipe, then the conviction formatted like 0.0000 .
+    1 special thing to note: if the token has any whitespace characters, they will get replaced by a period, but printed in dark gray.
+----------
+
 ---------- TICKET 037
 Title    : wandb log last_hidden_layer average size (vector length)
 Status   : PENDING
@@ -26,12 +37,6 @@ Title    : investigate gradient norms
 Status   : PENDING
     output_projection and conviction gradient norms get larger and larger over the course of a run. Why is this, and is there something that can be done to reduce this?
     Do output_projection grad norms explode like that when conviction is disabled?
-----------
-
----------- TICKET 013
-Title    : Conviction head completion tool
-Status   : PENDING
-    Since conviction is separate from the text itself, we need a way to run completions and see their conviction. Maybe hack mikupad to show conviction per token? Probably new simple web tool.
 ----------
 
 ---------- TICKET 011
@@ -75,7 +80,13 @@ Title    : Calculate optimal hyperparameters
 Status   : ICEBOX
 ----------
 
----------- TICKET 040
+---------- TICKET 013
+Title    : Conviction head completion tool
+Status   : PENDING
+    Since conviction is separate from the text itself, we need a way to run completions and see their conviction. Maybe hack mikupad to show conviction per token? Probably new simple web tool.
+----------
+
+---------- TICKET 041
 Title    : 
 Status   : PENDING
 
