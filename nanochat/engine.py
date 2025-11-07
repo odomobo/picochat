@@ -220,6 +220,11 @@ class Engine:
         next_ids = sample_next_token(logits, rng, temperature, top_k)  # (B, 1)
         sampled_tokens = next_ids[:, 0].tolist()
 
+        # Extract conviction if available (for prefill)
+        prefill_conviction = None
+        if "conviction" in output:
+            prefill_conviction = output["conviction"][:, -1, 0].tolist()  # (B,) at last position
+
         # 2) Replicate the KV cache for each sample/row
         kv_length_hint = (len(tokens) + max_tokens) if max_tokens is not None else self.model.config.sequence_len
         kv_cache_decode = KVCache(
@@ -249,6 +254,7 @@ class Engine:
                 # Use the tokens we already sampled from prefill
                 sampled_tokens = [sampled_tokens[0]] * num_samples  # Broadcast first token to all rows
                 # TODO: we should sample a token for each row instead of broadcasting
+                conviction_values = [prefill_conviction[0]] * num_samples if prefill_conviction else None
                 first_iteration = False
             else:
                 # Forward the model and get the next token for each row
@@ -258,15 +264,23 @@ class Engine:
                 next_ids = sample_next_token(logits, rng, temperature, top_k)  # (B, 1)
                 sampled_tokens = next_ids[:, 0].tolist()
 
+                # Extract conviction if available
+                conviction_values = None
+                if "conviction" in output:
+                    conviction_values = output["conviction"][:, -1, 0].tolist()  # (B,) at last position
+
             # Process each row: choose the next token, update state, optional tool use
             token_column = [] # contains the next token id along each row
             token_masks = [] # contains the mask (was it sampled (1) or forced (0)?) along each row
+            conviction_column = [] # contains conviction values (or None) along each row
             for i, state in enumerate(row_states):
                 # Select the next token in this row
                 is_forced = len(state.forced_tokens) > 0 # are there tokens waiting to be forced in deque?
                 token_masks.append(0 if is_forced else 1) # mask is 0 if forced, 1 if sampled
                 next_token = state.forced_tokens.popleft() if is_forced else sampled_tokens[i]
                 token_column.append(next_token)
+                # Add conviction value for this row
+                conviction_column.append(conviction_values[i] if conviction_values else None)
                 # Update the state of this row to include the next token
                 state.current_tokens.append(next_token)
                 # On <|assistant_end|> or <|bos|>, mark the row as completed
@@ -290,8 +304,8 @@ class Engine:
                 elif state.in_python_block:
                     state.python_expr_tokens.append(next_token)
 
-            # Yield the token column
-            yield token_column, token_masks
+            # Yield the token column with conviction values
+            yield token_column, token_masks, conviction_column
             num_generated += 1
             # Prepare ids for next iteration
             ids = torch.tensor(token_column, dtype=torch.long, device=device).unsqueeze(1)
@@ -307,7 +321,7 @@ class Engine:
         results = [tokens.copy() for _ in range(num_samples)]
         masks = [[0] * len(tokens) for _ in range(num_samples)]
         completed = [False] * num_samples
-        for token_column, token_masks in self.generate(tokens, num_samples, **kwargs):
+        for token_column, token_masks, conviction_column in self.generate(tokens, num_samples, **kwargs):
             for i, (token, mask) in enumerate(zip(token_column, token_masks)):
                 if not completed[i]:
                     if token == assistant_end or token == bos:
