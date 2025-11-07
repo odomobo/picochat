@@ -1,19 +1,37 @@
 
+---------- TICKET 037
+Title    : wandb log last_hidden_layer average size (vector length)
+Status   : PENDING
+----------
+
+---------- TICKET 034
+Title    : Cleanup wandb
+Status   : PENDING
+    Currently, the logging of the benchmarks mid-run go into the same place as when the run is completed. These should get separated. Maybe like "train_benchmarks" and "final_benchmarks".
+----------
+
+---------- TICKET 039
+Title    : wandb move some logging values to "debug"
+Status   : PENDING
+    conviction_loss, ce_loss, last_hidden_layer average size
+----------
+
 ---------- TICKET 036
 Title    : Add parameter to allow conviction to train lm_head
 Status   : PENDING
+----------
+
+---------- TICKET 038
+Title    : investigate gradient norms
+Status   : PENDING
+    output_projection and conviction gradient norms get larger and larger over the course of a run. Why is this, and is there something that can be done to reduce this?
+    Do output_projection grad norms explode like that when conviction is disabled?
 ----------
 
 ---------- TICKET 013
 Title    : Conviction head completion tool
 Status   : PENDING
     Since conviction is separate from the text itself, we need a way to run completions and see their conviction. Maybe hack mikupad to show conviction per token? Probably new simple web tool.
-----------
-
----------- TICKET 034
-Title    : Cleanup wandb
-Status   : PENDING
-    Currently, the logging of the benchmarks mid-run go into the same place as when the run is completed. These should get separated.
 ----------
 
 ---------- TICKET 011
@@ -57,7 +75,7 @@ Title    : Calculate optimal hyperparameters
 Status   : ICEBOX
 ----------
 
----------- TICKET 037
+---------- TICKET 040
 Title    : 
 Status   : PENDING
 
