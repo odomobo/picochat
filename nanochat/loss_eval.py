@@ -86,13 +86,13 @@ def compute_cross_entropy_loss(logits, targets, reduction='mean'):
     return loss
 
 
-def compute_conviction_loss(conviction, hidden_states, targets, embedding_layer):
+def compute_conviction_loss(conviction, last_hidden_state, targets, embedding_layer):
     """
     Compute conviction loss (MSE between predicted conviction and alignment target).
 
     Args:
         conviction: (B, T, 1) - predicted conviction scores
-        hidden_states: (B, T, n_embd) - hidden states before lm_head
+        last_hidden_state: (B, T, n_embd) - last hidden state before lm_head
         targets: (B, T) - target token ids
         embedding_layer: nn.Embedding - token embedding layer (e.g., model.transformer.wte)
 
@@ -103,7 +103,7 @@ def compute_conviction_loss(conviction, hidden_states, targets, embedding_layer)
     expected_embeds = embedding_layer(targets)  # (B, T, n_embd)
 
     # Compute dot product as target (measure of alignment between expected and actual)
-    conviction_target = (expected_embeds * hidden_states).sum(dim=-1, keepdim=True)  # (B, T, 1)
+    conviction_target = (expected_embeds * last_hidden_state).sum(dim=-1, keepdim=True)  # (B, T, 1)
 
     # MSE loss between predicted conviction and target
     loss = F.mse_loss(conviction.squeeze(-1), conviction_target.squeeze(-1))
@@ -119,7 +119,7 @@ def compute_training_loss(output, targets, model, conviction_loss_weight=0.01):
         output: Dict from model.forward() containing:
             - "logits": (B, T, vocab_size)
             - "conviction": (B, T, 1) if conviction head enabled
-            - "hidden_states": (B, T, n_embd) if conviction head enabled
+            - "last_hidden_state": (B, T, n_embd) if conviction head enabled
         targets: (B, T) target token ids
         model: The GPT model (needed to access model.transformer.wte for conviction target)
         conviction_loss_weight: Weight for conviction loss term (default: 0.01)
@@ -134,8 +134,8 @@ def compute_training_loss(output, targets, model, conviction_loss_weight=0.01):
     # Add conviction loss if enabled
     if "conviction" in output:
         conviction = output["conviction"]  # (B, T, 1)
-        hidden_states = output["hidden_states"]  # (B, T, n_embd)
-        conviction_loss = compute_conviction_loss(conviction, hidden_states, targets, model.transformer.wte)
+        last_hidden_state = output["last_hidden_state"]  # (B, T, n_embd)
+        conviction_loss = compute_conviction_loss(conviction, last_hidden_state, targets, model.transformer.wte)
         loss = loss + conviction_loss_weight * conviction_loss
 
     return loss

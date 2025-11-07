@@ -324,12 +324,12 @@ class GPT(nn.Module):
             x = block(x, cos_sin, kv_cache)
         x = norm(x)
 
-        # Save hidden states before output projection (for conviction head)
-        hidden_states = x
+        # Save last hidden state before output projection (for conviction head)
+        last_hidden_state = x
 
-        # Conviction head operates on hidden states before output projection
+        # Conviction head operates on last hidden state before output projection
         if self.config.use_conviction_head:
-            conviction = self.conviction_head(hidden_states)
+            conviction = self.conviction_head(last_hidden_state)
 
         if self.config.use_output_projection:
             x = self.output_projection(x)
@@ -348,7 +348,7 @@ class GPT(nn.Module):
         # Build output dict
         output = {"logits": logits}
         if self.config.use_conviction_head:
-            output["hidden_states"] = hidden_states
+            output["last_hidden_state"] = last_hidden_state
             output["conviction"] = conviction
 
         return output
