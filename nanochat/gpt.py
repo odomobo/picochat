@@ -324,15 +324,15 @@ class GPT(nn.Module):
             x = block(x, cos_sin, kv_cache)
         x = norm(x)
 
-        # Save last hidden state before output projection (for conviction head)
-        last_hidden_state = x
-
         # Conviction head operates on last hidden state before output projection
         if self.config.use_conviction_head:
-            conviction = self.conviction_head(last_hidden_state)
+            conviction = self.conviction_head(x)
 
         if self.config.use_output_projection:
             x = self.output_projection(x)
+
+        # Save last hidden state before lm_head (to calculate conviction)
+        last_hidden_state = x
 
         # Forward the lm_head (compute logits)
         softcap = 15
