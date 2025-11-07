@@ -26,7 +26,7 @@ from nanochat.dataloader import tokenizing_distributed_data_loader
 from nanochat.common import compute_init, compute_cleanup, print0, DummyWandb, print_banner, get_data_dir, get_run_dir, autodetect_device_type
 from nanochat.tokenizer import get_tokenizer, get_token_bytes
 from nanochat.checkpoint_manager import save_checkpoint
-from nanochat.loss_eval import evaluate_bpb
+from nanochat.loss_eval import evaluate_bpb, compute_training_loss
 from nanochat.engine import Engine
 from nanochat.model_calculator import calculate_model_size
 from scripts.base_eval import evaluate_model
@@ -317,25 +317,7 @@ for step in range(num_iterations + 1):
     for micro_step in range(grad_accum_steps):
         with autocast_ctx:
             output = model(x, y)
-            loss = output["loss"]
-
-            # Add conviction loss if enabled
-            if use_conviction_head:
-                conviction = output["conviction"]  # (B, T, 1)
-                hidden_states = output["hidden_states"]  # (B, T, n_embd)
-
-                # Get expected token embeddings
-                expected_embeds = orig_model.transformer.wte(y)  # (B, T, n_embd)
-
-                # Compute dot product as target (measure of alignment)
-                conviction_target = (expected_embeds * hidden_states).sum(dim=-1, keepdim=True)  # (B, T, 1)
-
-                # MSE loss between predicted conviction and target
-                conviction_loss = F.mse_loss(conviction.squeeze(-1), conviction_target.squeeze(-1))
-
-                # Add to total loss
-                loss = loss + conviction_loss_weight * conviction_loss
-
+            loss = compute_training_loss(output, y, orig_model, conviction_loss_weight)
         train_loss = loss.detach() # for logging
         loss = loss / grad_accum_steps # each .backward() is a grad sum => normalize loss here
         loss.backward()

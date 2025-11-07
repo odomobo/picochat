@@ -3,6 +3,7 @@ A number of functions that help with evaluating a base model.
 """
 import math
 import torch
+import torch.nn.functional as F
 import torch.distributed as dist
 
 @torch.no_grad()
@@ -30,9 +31,11 @@ def evaluate_bpb(model, batches, steps, token_bytes):
     batch_iter = iter(batches)
     for _ in range(steps):
         x, y = next(batch_iter)
-        output = model(x, y, loss_reduction='none')
-        loss2d = output["loss"] # (B, T)
-        loss2d = loss2d.view(-1) # flatten
+        output = model(x, y)
+        logits = output["logits"]  # (B, T, vocab_size)
+        # Compute per-token cross-entropy loss
+        B, T = x.size()
+        loss2d = compute_cross_entropy_loss(logits, y, reduction='none')  # (B*T,)
         y = y.view(-1) # flatten
         if (y.int() < 0).any(): # mps does not currently have kernel for < 0 for int64, only int32
             # slightly more complex code path if some target tokens are ignore_index (e.g. -1)
@@ -64,3 +67,75 @@ def evaluate_bpb(model, batches, steps, token_bytes):
         return float('inf')
     bpb = total_nats / (math.log(2) * total_bytes)
     return bpb
+
+
+def compute_cross_entropy_loss(logits, targets, reduction='mean'):
+    """
+    Compute cross-entropy loss from logits and targets.
+
+    Args:
+        logits: (B, T, vocab_size) - model predictions
+        targets: (B, T) - target token ids
+        reduction: 'mean', 'sum', or 'none' - reduction method
+
+    Returns:
+        loss: Cross-entropy loss (scalar if reduction='mean'/'sum', (B*T,) if 'none')
+    """
+    logits = logits.float()  # use tf32/fp32 for logits
+    loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1, reduction=reduction)
+    return loss
+
+
+def compute_conviction_loss(conviction, hidden_states, targets, embedding_layer):
+    """
+    Compute conviction loss (MSE between predicted conviction and alignment target).
+
+    Args:
+        conviction: (B, T, 1) - predicted conviction scores
+        hidden_states: (B, T, n_embd) - hidden states before lm_head
+        targets: (B, T) - target token ids
+        embedding_layer: nn.Embedding - token embedding layer (e.g., model.transformer.wte)
+
+    Returns:
+        loss: Scalar conviction loss
+    """
+    # Get expected token embeddings
+    expected_embeds = embedding_layer(targets)  # (B, T, n_embd)
+
+    # Compute dot product as target (measure of alignment between expected and actual)
+    conviction_target = (expected_embeds * hidden_states).sum(dim=-1, keepdim=True)  # (B, T, 1)
+
+    # MSE loss between predicted conviction and target
+    loss = F.mse_loss(conviction.squeeze(-1), conviction_target.squeeze(-1))
+
+    return loss
+
+
+def compute_training_loss(output, targets, model, conviction_loss_weight=0.01):
+    """
+    Compute the combined training loss for base model pretraining.
+
+    Args:
+        output: Dict from model.forward() containing:
+            - "logits": (B, T, vocab_size)
+            - "conviction": (B, T, 1) if conviction head enabled
+            - "hidden_states": (B, T, n_embd) if conviction head enabled
+        targets: (B, T) target token ids
+        model: The GPT model (needed to access model.transformer.wte for conviction target)
+        conviction_loss_weight: Weight for conviction loss term (default: 0.01)
+
+    Returns:
+        loss: Combined scalar loss (cross-entropy + conviction if enabled)
+    """
+    # Cross-entropy loss on logits
+    logits = output["logits"]
+    loss = compute_cross_entropy_loss(logits, targets, reduction='mean')
+
+    # Add conviction loss if enabled
+    if "conviction" in output:
+        conviction = output["conviction"]  # (B, T, 1)
+        hidden_states = output["hidden_states"]  # (B, T, n_embd)
+        conviction_loss = compute_conviction_loss(conviction, hidden_states, targets, model.transformer.wte)
+        loss = loss + conviction_loss_weight * conviction_loss
+
+    return loss
