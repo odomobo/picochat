@@ -224,6 +224,40 @@ def get_muon_momentum(it):
     momentum = (1 - frac) * 0.85 + frac * 0.95
     return momentum
 
+# Gradient norm computation for logging
+def compute_gradient_norms(model):
+    """Compute L2 norms of gradients for different parameter groups (before clipping)."""
+    # Separate parameters by group (matching optimizer setup)
+    matrix_params = list(model.transformer.h.parameters())
+    if model.config.use_output_projection:
+        matrix_params.extend(list(model.output_projection.parameters()))
+
+    embedding_params = list(model.transformer.wte.parameters())
+
+    if model.config.tie_weights:
+        lm_head_params = []  # Tied, counted in embedding
+    else:
+        lm_head_params = list(model.lm_head.parameters())
+
+    conviction_params = []
+    if model.config.use_conviction_head:
+        conviction_params = list(model.conviction_head.parameters())
+
+    # Compute L2 norm for each group
+    def group_norm(params):
+        grads = [p.grad for p in params if p.grad is not None]
+        if not grads:
+            return 0.0
+        return torch.sqrt(sum(g.pow(2).sum() for g in grads)).item()
+
+    return {
+        "grad_norm/total": group_norm(list(model.parameters())),
+        "grad_norm/embedding": group_norm(embedding_params),
+        "grad_norm/lm_head": group_norm(lm_head_params) if lm_head_params else 0.0,
+        "grad_norm/transformer": group_norm(matrix_params),
+        "grad_norm/conviction": group_norm(conviction_params) if conviction_params else 0.0,
+    }
+
 # -----------------------------------------------------------------------------
 # Training loop
 min_val_bpb = float("inf")
@@ -322,6 +356,10 @@ for step in range(num_iterations + 1):
         loss = loss / grad_accum_steps # each .backward() is a grad sum => normalize loss here
         loss.backward()
         x, y = next(train_loader) # prefetch the next batch while the GPU is busy with forward/backward
+    # Compute gradient norms (before clipping, if we're going to log this step)
+    log_this_step = (step % 1 == 0)
+    if log_this_step:
+        grad_norms = compute_gradient_norms(orig_model)
     # gradient clipping (TODO possibly experiment with)
     if grad_clip > 0.0:
         torch.nn.utils.clip_grad_norm_(orig_model.parameters(), grad_clip)
@@ -354,7 +392,7 @@ for step in range(num_iterations + 1):
     print0(f"step {step:05d}/{num_iterations:05d} ({pct_done:.2f}%) | loss: {debiased_smooth_loss:.6f} | lrm: {lrm:.2f} | dt: {dt * 1000:.2f}ms | tok/sec: {tok_per_sec:,} | mfu: {mfu:.2f} | total time: {total_training_time/60:.2f}m")
     # log _every_ step
     if step % 1 == 0:
-        wandb_run.log({
+        log_dict = {
             "total_training_petaflops": flops_so_far / 1e15,
             "step": step,
             "total_tokens": step * total_batch_size,
@@ -365,7 +403,10 @@ for step in range(num_iterations + 1):
             "train/dt": dt,
             "train/tok_per_sec": tok_per_sec,
             "train/mfu": mfu,
-        })
+        }
+        if log_this_step:
+            log_dict.update(grad_norms)
+        wandb_run.log(log_dict)
 
 # print a few more stats
 print0(f"Peak memory usage: {get_max_memory() / 1024 / 1024:.2f}MiB")
