@@ -1,19 +1,13 @@
 
----------- TICKET 035
-Title    : Debug increasing loss
-Status   : IN PROGRESS
-    When conviction is enabled, loss decreases like normal (although a bit slower than I expect), but then about 1/4th of the way through the run, it levels off, and then begins steadily increasing.
+---------- TICKET 036
+Title    : Add parameter to allow conviction to train lm_head
+Status   : PENDING
 ----------
 
----------- TICKET 012
-Title    : Add "conviction" head.
-Status   : TESTING
-    Add a scalar "conviction" head, which is trained based on the dot product of expected token embedding and actual embedding hidden state.
 ---------- TICKET 013
-Title    : Confidence head completion tool
+Title    : Conviction head completion tool
 Status   : PENDING
-    Since confidence is separate from the text itself, we need a way to run completions and see their confidence. Maybe hack mikupad to show confidence per token?
-    Depends on [012] of course.
+    Since conviction is separate from the text itself, we need a way to run completions and see their conviction. Maybe hack mikupad to show conviction per token? Probably new simple web tool.
 ----------
 
 ---------- TICKET 034
@@ -63,7 +57,7 @@ Title    : Calculate optimal hyperparameters
 Status   : ICEBOX
 ----------
 
----------- TICKET 036
+---------- TICKET 037
 Title    : 
 Status   : PENDING
 
