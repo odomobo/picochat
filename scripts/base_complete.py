@@ -36,13 +36,25 @@ GRAY = '\033[90m'
 RESET = '\033[0m'
 
 def format_token_for_conviction_display(token_text):
-    """Replace whitespace chars with gray periods for conviction display."""
+    """
+    Replace whitespace chars with gray periods for conviction display.
+    Pads to exactly 8 visible characters (accounting for ANSI codes).
+    """
+    visible_chars = 0
     result = ""
+
     for char in token_text:
         if char.isspace():
             result += f"{GRAY}.{RESET}"
+            visible_chars += 1
         else:
             result += char
+            visible_chars += 1
+
+    # Pad with spaces to reach 8 visible characters
+    if visible_chars < 8:
+        result += " " * (8 - visible_chars)
+
     return result
 
 # Init the model and tokenizer
@@ -123,7 +135,7 @@ while True:
                     else:
                         conviction_str = f"{conviction:.4f}"
 
-                    print(f"{display_text:<8} | {conviction_str}")
+                    print(f"{display_text}| {conviction_str}")
             else:
                 # Normal mode: print prompt in gray, then stream tokens
                 print(f"\n{GRAY}{input_text}{RESET}", end='', flush=True)
