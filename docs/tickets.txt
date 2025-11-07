@@ -10,6 +10,12 @@ Status   : PENDING
     Depends on [012] of course.
 ----------
 
+---------- TICKET 034
+Title    : Cleanup wandb
+Status   : PENDING
+    Currently, the logging of the benchmarks mid-run go into the same place as when the run is completed. These should get separated.
+----------
+
 ---------- TICKET 011
 Title    : Create corpus size calculator
 Status   : PENDING
@@ -51,7 +57,7 @@ Title    : Calculate optimal hyperparameters
 Status   : ICEBOX
 ----------
 
----------- TICKET 034
+---------- TICKET 035
 Title    : 
 Status   : PENDING
 
