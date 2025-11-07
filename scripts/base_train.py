@@ -350,14 +350,25 @@ for step in range(num_iterations + 1):
     # evaluate the gradient
     synchronize()
     t0 = time.time()
+    # Initialize accumulators for loss components
+    total_ce_loss = 0.0
+    total_conviction_loss = 0.0
     for micro_step in range(grad_accum_steps):
         with autocast_ctx:
             output = model(x, y)
-            loss = compute_training_loss(output, y, orig_model, conviction_loss_weight)
+            loss, loss_components = compute_training_loss(output, y, orig_model, conviction_loss_weight)
+            # Accumulate components
+            total_ce_loss += loss_components["ce_loss"]
+            if "conviction_loss" in loss_components:
+                total_conviction_loss += loss_components["conviction_loss"]
         train_loss = loss.detach() # for logging
         loss = loss / grad_accum_steps # each .backward() is a grad sum => normalize loss here
         loss.backward()
         x, y = next(train_loader) # prefetch the next batch while the GPU is busy with forward/backward
+    # Average the components over gradient accumulation steps
+    avg_ce_loss = total_ce_loss / grad_accum_steps
+    if use_conviction_head:
+        avg_conviction_loss = total_conviction_loss / grad_accum_steps
     # log _every_ step for now
     log_this_step = (step % 1 == 0)
     # Compute gradient norms before clipping, only if we're going to log this step
@@ -402,12 +413,16 @@ for step in range(num_iterations + 1):
             "total_training_flops": flops_so_far,
             "total_training_time": total_training_time,
             "train/loss": debiased_smooth_loss,
+            "train/ce_loss": avg_ce_loss,
             "train/lrm": lrm,
             "train/dt": dt,
             "train/tok_per_sec": tok_per_sec,
             "train/mfu": mfu,
             **grad_norms,
         }
+        # Only add conviction loss if enabled
+        if use_conviction_head:
+            log_dict["train/conviction_loss"] = avg_conviction_loss
         wandb_run.log(log_dict)
 
 # print a few more stats

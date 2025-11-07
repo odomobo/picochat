@@ -129,16 +129,24 @@ def compute_training_loss(output, targets, model, conviction_loss_weight=0.01):
 
     Returns:
         loss: Combined scalar loss (cross-entropy + conviction if enabled)
+        components: Dict with loss breakdown {"ce_loss": float, "conviction_loss": float (optional)}
     """
     # Cross-entropy loss on logits
     logits = output["logits"]
-    loss = compute_cross_entropy_loss(logits, targets, reduction='mean')
+    ce_loss = compute_cross_entropy_loss(logits, targets, reduction='mean')
+
+    components = {
+        "ce_loss": ce_loss.item(),
+    }
 
     # Add conviction loss if enabled
     if "conviction" in output:
         conviction = output["conviction"]  # (B, T, 1)
         last_hidden_state = output["last_hidden_state"]  # (B, T, n_embd)
         conviction_loss = compute_conviction_loss(conviction, last_hidden_state, targets, model.transformer.wte)
-        loss = loss + conviction_loss_weight * conviction_loss
+        components["conviction_loss"] = conviction_loss.item()  # Only add if enabled
+        total_loss = ce_loss + conviction_loss_weight * conviction_loss
+    else:
+        total_loss = ce_loss
 
-    return loss
+    return total_loss, components
