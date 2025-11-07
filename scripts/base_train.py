@@ -227,21 +227,6 @@ def get_muon_momentum(it):
 # Gradient norm computation for logging
 def compute_gradient_norms(model):
     """Compute L2 norms of gradients for different parameter groups (before clipping)."""
-    # Separate parameters by group (matching optimizer setup)
-    matrix_params = list(model.transformer.h.parameters())
-    if model.config.use_output_projection:
-        matrix_params.extend(list(model.output_projection.parameters()))
-
-    embedding_params = list(model.transformer.wte.parameters())
-
-    if model.config.tie_weights:
-        lm_head_params = []  # Tied, counted in embedding
-    else:
-        lm_head_params = list(model.lm_head.parameters())
-
-    conviction_params = []
-    if model.config.use_conviction_head:
-        conviction_params = list(model.conviction_head.parameters())
 
     # Compute L2 norm for each group
     def group_norm(params):
@@ -249,14 +234,31 @@ def compute_gradient_norms(model):
         if not grads:
             return 0.0
         return torch.sqrt(sum(g.pow(2).sum() for g in grads)).item()
+    
+    ret = {}
 
-    return {
-        "grad_norm/total": group_norm(list(model.parameters())),
-        "grad_norm/embedding": group_norm(embedding_params),
-        "grad_norm/lm_head": group_norm(lm_head_params) if lm_head_params else 0.0,
-        "grad_norm/transformer": group_norm(matrix_params),
-        "grad_norm/conviction": group_norm(conviction_params) if conviction_params else 0.0,
-    }
+    ret["grad_norm/total"] = group_norm(list(model.parameters()))
+
+    # Separate parameters by group (matching optimizer setup)
+    transformer_params = list(model.transformer.h.parameters())
+    ret["grad_norm/transformer"] = group_norm(transformer_params)
+
+    if model.config.use_output_projection:
+        output_projection_params = list(model.output_projection.parameters())
+        ret["grad_norm/output_projection"] = group_norm(output_projection_params)
+
+    embedding_params = list(model.transformer.wte.parameters())
+    ret["grad_norm/embedding"] = group_norm(embedding_params)
+
+    if not model.config.tie_weights:
+        lm_head_params = list(model.lm_head.parameters())
+        ret["grad_norm/lm_head"] = group_norm(lm_head_params)
+
+    if model.config.use_conviction_head:
+        conviction_params = list(model.conviction_head.parameters())
+        ret["grad_norm/conviction"] = group_norm(conviction_params)
+
+    return ret
 
 # -----------------------------------------------------------------------------
 # Training loop
@@ -404,8 +406,8 @@ for step in range(num_iterations + 1):
             "train/dt": dt,
             "train/tok_per_sec": tok_per_sec,
             "train/mfu": mfu,
+            **grad_norms,
         }
-        log_dict.update(grad_norms)
         wandb_run.log(log_dict)
 
 # print a few more stats
