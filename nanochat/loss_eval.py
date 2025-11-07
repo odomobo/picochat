@@ -86,7 +86,7 @@ def compute_cross_entropy_loss(logits, targets, reduction='mean'):
     return loss
 
 
-def compute_conviction_loss(conviction, last_hidden_state, targets, embedding_layer):
+def compute_conviction_loss(conviction, last_hidden_state, targets, lm_head):
     """
     Compute conviction loss (MSE between predicted conviction and alignment target).
 
@@ -94,13 +94,13 @@ def compute_conviction_loss(conviction, last_hidden_state, targets, embedding_la
         conviction: (B, T, 1) - predicted conviction scores
         last_hidden_state: (B, T, n_embd) - last hidden state before lm_head
         targets: (B, T) - target token ids
-        embedding_layer: nn.Embedding - token embedding layer (e.g., model.transformer.wte)
+        lm_head: nn.Embedding - token embedding layer (e.g., model.transformer.wte)
 
     Returns:
         loss: Scalar conviction loss
     """
     # Get expected token embeddings
-    expected_embeds = embedding_layer(targets)  # (B, T, n_embd)
+    expected_embeds = lm_head(targets)  # (B, T, n_embd)
 
     # Compute dot product as target (measure of alignment between expected and actual)
     conviction_target = (expected_embeds * last_hidden_state).sum(dim=-1, keepdim=True)  # (B, T, 1)
