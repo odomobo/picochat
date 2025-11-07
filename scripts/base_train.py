@@ -356,8 +356,9 @@ for step in range(num_iterations + 1):
         loss = loss / grad_accum_steps # each .backward() is a grad sum => normalize loss here
         loss.backward()
         x, y = next(train_loader) # prefetch the next batch while the GPU is busy with forward/backward
-    # Compute gradient norms (before clipping, if we're going to log this step)
+    # log _every_ step for now
     log_this_step = (step % 1 == 0)
+    # Compute gradient norms before clipping, only if we're going to log this step
     if log_this_step:
         grad_norms = compute_gradient_norms(orig_model)
     # gradient clipping (TODO possibly experiment with)
@@ -390,8 +391,8 @@ for step in range(num_iterations + 1):
     if step > 1:
         total_training_time += dt # only count the time after the first step
     print0(f"step {step:05d}/{num_iterations:05d} ({pct_done:.2f}%) | loss: {debiased_smooth_loss:.6f} | lrm: {lrm:.2f} | dt: {dt * 1000:.2f}ms | tok/sec: {tok_per_sec:,} | mfu: {mfu:.2f} | total time: {total_training_time/60:.2f}m")
-    # log _every_ step
-    if step % 1 == 0:
+    
+    if log_this_step:
         log_dict = {
             "total_training_petaflops": flops_so_far / 1e15,
             "step": step,
@@ -404,8 +405,7 @@ for step in range(num_iterations + 1):
             "train/tok_per_sec": tok_per_sec,
             "train/mfu": mfu,
         }
-        if log_this_step:
-            log_dict.update(grad_norms)
+        log_dict.update(grad_norms)
         wandb_run.log(log_dict)
 
 # print a few more stats
