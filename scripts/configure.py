@@ -193,11 +193,11 @@ def main(dry_run=False):
 
     # only ask for use_output_projection if tie_weights is enabled; we can use this if it's not, but it's not that useful otherwise
     if tie_weights:
-        use_output_projection = get_bool_input("Use output projection matrix? (before tied lm_head)? Probably really useful!", default=True)
+        use_output_projection = get_bool_input("Use output projection matrix? (before tied lm_head)? Useful at low depths.", default=True)
     else:
         use_output_projection = False
 
-    use_conviction_head = get_bool_input("Enable conviction head?", default=False)
+    use_conviction_head = get_bool_input("Enable conviction head?", default=True)
 
     # Only ask for conviction_loss_weight if conviction head is enabled
     if use_conviction_head:
