@@ -1,4 +1,10 @@
 
+---------- TICKET 035
+Title    : Debug increasing loss
+Status   : IN PROGRESS
+    When conviction is enabled, loss decreases like normal (although a bit slower than I expect), but then about 1/4th of the way through the run, it levels off, and then begins steadily increasing.
+----------
+
 ---------- TICKET 012
 Title    : Add "conviction" head.
 Status   : TESTING
@@ -57,7 +63,7 @@ Title    : Calculate optimal hyperparameters
 Status   : ICEBOX
 ----------
 
----------- TICKET 035
+---------- TICKET 036
 Title    : 
 Status   : PENDING
 
