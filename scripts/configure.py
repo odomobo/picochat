@@ -199,6 +199,12 @@ def main(dry_run=False):
 
     use_conviction_head = get_bool_input("Enable conviction head?", default=False)
 
+    # Only ask for conviction_loss_weight if conviction head is enabled
+    if use_conviction_head:
+        conviction_loss_weight = get_float_input("Conviction loss weight (relative to cross-entropy loss)", default=0.01)
+    else:
+        conviction_loss_weight = 0.01  # Default value, unused when use_conviction_head=False
+
     # Architecture customization
     activation_fn = get_string_input("Activation function (relu_squared, relu, gelu)", default="relu_squared")
     if activation_fn not in ["relu_squared", "relu", "gelu"]:
@@ -364,6 +370,7 @@ ffn_expansion_ratio = {ffn_expansion_ratio}  # MLP expansion ratio
 device_batch_size = {device_batch_size}
 total_batch_size = {total_batch_size}
 tied_weights_lr = {tied_weights_lr}  # learning rate for tied weights (when tie_weights=True)
+conviction_loss_weight = {conviction_loss_weight}  # weight for conviction loss term (only used if use_conviction_head=True)
 
 # Training horizon
 # Only one of (num_iterations, target_flops, target_param_data_ratio) will be used

@@ -324,9 +324,12 @@ class GPT(nn.Module):
             x = block(x, cos_sin, kv_cache)
         x = norm(x)
 
-        # conviction head is after output to 
+        # Save hidden states before output projection (for conviction head)
+        hidden_states = x
+
+        # Conviction head operates on hidden states before output projection
         if self.config.use_conviction_head:
-            conviction = self.conviction_head(x)
+            conviction = self.conviction_head(hidden_states)
 
         if self.config.use_output_projection:
             x = self.output_projection(x)
@@ -342,15 +345,20 @@ class GPT(nn.Module):
 
         logits = softcap * torch.tanh(logits / softcap) # logits softcap
 
+        # Build output dict
+        output = {"logits": logits}
+        if self.config.use_conviction_head:
+            output["hidden_states"] = hidden_states
+            output["conviction"] = conviction
+
         if targets is not None:
             # training mode: compute and return the loss
             # TODO: experiment with Liger Kernels / chunked cross-entropy etc.
             logits = logits.float() # use tf32/fp32 for logits
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1, reduction=loss_reduction)
-            return loss
-        else:
-            # inference mode: return the logits
-            return logits
+            output["loss"] = loss
+
+        return output
 
     @torch.inference_mode()
     def generate(self, tokens, max_tokens, temperature=1.0, top_k=None, seed=42):
@@ -368,7 +376,8 @@ class GPT(nn.Module):
             rng.manual_seed(seed)
         ids = torch.tensor([tokens], dtype=torch.long, device=device) # add batch dim
         for _ in range(max_tokens):
-            logits = self.forward(ids) # (B, T, vocab_size)
+            output = self.forward(ids) # returns dict
+            logits = output["logits"] # (B, T, vocab_size)
             logits = logits[:, -1, :] # (B, vocab_size)
             if top_k is not None:
                 v, _ = torch.topk(logits, min(top_k, logits.size(-1)))

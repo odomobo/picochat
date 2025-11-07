@@ -64,6 +64,7 @@ tied_weights_lr = 0.2 # learning rate for tied weights when tie_weights=True (Ad
 weight_decay = 0.0 # weight decay for the embedding/unembedding parameters (Adam)
 matrix_lr = 0.02 # learning rate for the matrix parameters (Muon)
 grad_clip = 1.0 # gradient clipping value (0.0 = disabled)
+conviction_loss_weight = 0.01 # weight for conviction loss term (only used if use_conviction_head=True)
 warmup_ratio = 0.0 # ratio of iterations for LR warmup
 warmdown_ratio = 0.2 # ratio of iterations for LR warmdown
 final_lr_frac = 0.0 # final LR is this fraction of the initial LR
@@ -315,7 +316,26 @@ for step in range(num_iterations + 1):
     t0 = time.time()
     for micro_step in range(grad_accum_steps):
         with autocast_ctx:
-            loss = model(x, y)
+            output = model(x, y)
+            loss = output["loss"]
+
+            # Add conviction loss if enabled
+            if use_conviction_head:
+                conviction = output["conviction"]  # (B, T, 1)
+                hidden_states = output["hidden_states"]  # (B, T, n_embd)
+
+                # Get expected token embeddings
+                expected_embeds = orig_model.transformer.wte(y)  # (B, T, n_embd)
+
+                # Compute dot product as target (measure of alignment)
+                conviction_target = (expected_embeds * hidden_states).sum(dim=-1, keepdim=True)  # (B, T, 1)
+
+                # MSE loss between predicted conviction and target
+                conviction_loss = F.mse_loss(conviction.squeeze(-1), conviction_target.squeeze(-1))
+
+                # Add to total loss
+                loss = loss + conviction_loss_weight * conviction_loss
+
         train_loss = loss.detach() # for logging
         loss = loss / grad_accum_steps # each .backward() is a grad sum => normalize loss here
         loss.backward()
