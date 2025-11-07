@@ -99,11 +99,14 @@ def compute_conviction_loss(conviction, last_hidden_state, targets, lm_head):
     Returns:
         loss: Scalar conviction loss
     """
-    # Get expected token embeddings
-    expected_embeds = lm_head(targets)  # (B, T, n_embd)
 
-    # Compute dot product as target (measure of alignment between expected and actual)
-    conviction_target = (expected_embeds * last_hidden_state).sum(dim=-1, keepdim=True)  # (B, T, 1)
+    # Note: we don't want the evaluation of conviction_target to be part of backprop!
+    with torch.no_grad():
+        # Get expected token embeddings
+        expected_embeds = lm_head(targets)  # (B, T, n_embd)
+
+        # Compute dot product as target (measure of alignment between expected and actual)
+        conviction_target = (expected_embeds * last_hidden_state).sum(dim=-1, keepdim=True)  # (B, T, 1)
 
     # MSE loss between predicted conviction and target
     loss = F.mse_loss(conviction.squeeze(-1), conviction_target.squeeze(-1))
