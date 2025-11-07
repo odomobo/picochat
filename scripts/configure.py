@@ -396,7 +396,7 @@ target_param_data_ratio = {target_param_data_ratio}  # Chinchilla scaling (20 = 
     print()
     print("Next steps:")
     print("  1. Review the configuration file if needed")
-    print("  2. Run: bash start_run.sh")
+    print("  2. Run: bash scripts/run_start.sh")
     print()
 
 
