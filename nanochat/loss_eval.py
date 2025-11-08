@@ -3,6 +3,7 @@ A number of functions that help with evaluating a base model.
 """
 import math
 import torch
+import torch.linalg
 import torch.nn.functional as F
 import torch.distributed as dist
 
@@ -107,19 +108,18 @@ def compute_conviction_loss(conviction, last_hidden_state, targets, lm_head, con
         expected_embeds = lm_head(targets)  # (B, T, n_embd)
 
         # Compute conviction target based on chosen function
+        # Make sure we squeeze the n_embd dimension in here
         if conviction_function == "l2_distance":
-            # TODO: Implement L2 distance between expected_embeds and last_hidden_state
-            # This should capture both direction and magnitude differences
-            raise NotImplementedError("L2 distance conviction function not yet implemented")
+            # L2 distance captures both direction and magnitude differences
+            conviction_target = torch.linalg.norm(expected_embeds - last_hidden_state, dim=-1)  # (B, T, n_embd)
         elif conviction_function == "cosine_similarity":
-            # TODO: Implement cosine similarity between expected_embeds and last_hidden_state
-            # This captures direction but not magnitude
+            # Cosine similarity captures direction but not magnitude
             conviction_target = F.cosine_similarity(expected_embeds, last_hidden_state, dim=-1)  # (B, T, n_embd)
         else:
             raise ValueError(f"Unknown conviction_function: {conviction_function}. Expected 'l2_distance' or 'cosine_similarity'")
 
     # MSE loss between predicted conviction and target
-    loss = F.mse_loss(conviction.squeeze(-1), conviction_target.squeeze(-1))
+    loss = F.mse_loss(conviction.squeeze(-1), conviction_target)
 
     return loss
 
