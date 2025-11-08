@@ -133,7 +133,7 @@ while True:
                     if conviction is None:
                         conviction_str = "N/A"
                     else:
-                        conviction_str = f"{conviction:.4f}"
+                        conviction_str = f"{conviction:08.4f}"
 
                     print(f"{display_text}| {conviction_str}")
             else:
