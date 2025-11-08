@@ -1,24 +1,26 @@
 
+---------- TICKET 041
+Title    : Try norm after output projection
+Status   : PENDING
+----------
+
 ---------- TICKET 037
 Title    : wandb log last_hidden_layer average size (vector length)
 Status   : PENDING
+    Maybe??? see the result of [041] first.
 ----------
 
 ---------- TICKET 034
 Title    : Cleanup wandb
 Status   : PENDING
     Currently, the logging of the benchmarks mid-run go into the same place as when the run is completed. These should get separated. Maybe like "train_benchmarks" and "final_benchmarks".
+    Wait... we also need to log final benchmarks!
 ----------
 
 ---------- TICKET 039
 Title    : wandb move some logging values to "debug"
 Status   : PENDING
     conviction_loss, ce_loss, last_hidden_layer average size
-----------
-
----------- TICKET 036
-Title    : Add parameter to allow conviction to train lm_head
-Status   : PENDING
 ----------
 
 ---------- TICKET 011
@@ -68,7 +70,7 @@ Status   : PENDING
     Since conviction is separate from the text itself, we need a way to run completions and see their conviction. Maybe hack mikupad to show conviction per token? Probably new simple web tool.
 ----------
 
----------- TICKET 041
+---------- TICKET 042
 Title    : 
 Status   : PENDING
 
