@@ -306,7 +306,7 @@ class GPT(nn.Module):
                 group["initial_lr"] = group["lr"]
         return optimizers
 
-    def forward(self, idx, targets=None, kv_cache=None, conviction_loss_weight=0.01, loss_reduction='mean'):
+    def forward(self, idx, targets=None, kv_cache=None, loss_reduction='mean'):
         B, T = idx.size()
 
         # Grab the rotary embeddings for the current sequence length (they are of shape (1, seq_len, 1, head_dim))
@@ -364,7 +364,7 @@ class GPT(nn.Module):
             if self.config.use_conviction_head:
                 conviction_loss = self.compute_conviction_loss(conviction, last_hidden_state, targets)
                 loss_components["conviction_loss"] = conviction_loss  # Keep as tensor
-                total_loss = ce_loss + conviction_loss_weight * conviction_loss
+                total_loss = ce_loss + self.config.conviction_loss_weight * conviction_loss
             else:
                 total_loss = ce_loss
 

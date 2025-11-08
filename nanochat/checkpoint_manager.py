@@ -72,6 +72,14 @@ def _backward_compatibility(model_config_kwargs):
         model_config_kwargs["use_conviction_head"] = False
         log0("Warning: use_conviction_head not found in checkpoint metadata, assuming False (old behavior)")
 
+    if "conviction_function" not in model_config_kwargs:
+        model_config_kwargs["conviction_function"] = "l2_distance"
+        log0("Warning: conviction_function not found in checkpoint metadata, assuming l2_distance (old behavior)")
+
+    if "conviction_loss_weight" not in model_config_kwargs:
+        model_config_kwargs["conviction_loss_weight"] = 0.01
+        log0("Warning: conviction_loss_weight not found in checkpoint metadata, assuming 0.01 (old behavior)")
+
     if "activation_fn" not in model_config_kwargs:
         model_config_kwargs["activation_fn"] = "relu_squared"
         log0("Warning: activation_fn not found in checkpoint metadata, assuming relu_squared (old behavior)")
