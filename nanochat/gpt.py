@@ -435,7 +435,10 @@ class GPT(nn.Module):
         """
 
         # Get expected token embeddings
-        expected_embeds = self.transformer.wte(targets)  # (B, T, n_embd)
+        if self.config.tie_weights:
+            expected_embeds = self.transformer.wte(targets)  # (B, T, n_embd)
+        else:
+            expected_embeds = self.lm_head  # I hope this works; fairly untested
 
         # Compute conviction target based on chosen function
         if self.config.conviction_function == "l2_distance":
