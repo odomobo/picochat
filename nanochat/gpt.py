@@ -433,20 +433,23 @@ class GPT(nn.Module):
         Returns:
             loss: Scalar conviction loss
         """
-        # Note: we don't want the evaluation of conviction_target to be part of backprop!
-        with torch.no_grad():
-            # Get expected token embeddings
-            expected_embeds = self.transformer.wte(targets)  # (B, T, n_embd)
 
-            # Compute conviction target based on chosen function
-            if self.config.conviction_function == "l2_distance":
-                # L2 distance captures both direction and magnitude differences
-                conviction_target = torch.linalg.norm(expected_embeds - last_hidden_state, dim=-1)
-            elif self.config.conviction_function == "cosine_similarity":
-                # Cosine similarity captures direction but not magnitude
-                conviction_target = F.cosine_similarity(expected_embeds, last_hidden_state, dim=-1)
-            else:
-                raise ValueError(f"Unknown conviction_function: {self.config.conviction_function}. Expected 'l2_distance' or 'cosine_similarity'")
+        # Get expected token embeddings
+        expected_embeds = self.transformer.wte(targets)  # (B, T, n_embd)
+
+        # Compute conviction target based on chosen function
+        if self.config.conviction_function == "l2_distance":
+            # L2 distance captures both direction and magnitude differences
+            conviction_target = torch.linalg.norm(expected_embeds - last_hidden_state, dim=-1)
+        elif self.config.conviction_function == "cosine_similarity":
+            # Cosine similarity captures direction but not magnitude
+            conviction_target = F.cosine_similarity(expected_embeds, last_hidden_state, dim=-1)
+        else:
+            raise ValueError(f"Unknown conviction_function: {self.config.conviction_function}. Expected 'l2_distance' or 'cosine_similarity'")
+        
+        # sever the graph so the conviction loss doesn't train the LM head
+        if not self.config.conviction_trains_lm_head:
+            conviction_target = conviction_target.detach()
 
         # MSE loss between predicted conviction and target
         loss = F.mse_loss(conviction.squeeze(-1), conviction_target)
