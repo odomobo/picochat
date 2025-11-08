@@ -353,14 +353,14 @@ class GPT(nn.Module):
 
         # Compute loss if targets provided (training mode)
         if targets is not None:
-            # Cross-entropy loss with specified reduction
+            # Cross-entropy loss
             ce_loss = self.compute_cross_entropy_loss(logits, targets, reduction=loss_reduction)
 
-            # For per-token losses (reduction='none'), only return CE loss (for BPB evaluation)
             if loss_reduction == 'none':
-                output["loss"] = ce_loss  # (B*T,) per-token losses
+                # Per-token losses for BPB evaluation - just return CE loss
+                output["loss"] = ce_loss  # (B*T,)
             else:
-                # For scalar losses (reduction='mean'), include conviction loss and components
+                # Scalar loss for training - include conviction loss and components
                 loss_components = {
                     "ce_loss": ce_loss.item(),
                 }
