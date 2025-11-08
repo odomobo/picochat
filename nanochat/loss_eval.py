@@ -32,7 +32,7 @@ def evaluate_bpb(model, batches, steps, token_bytes):
     batch_iter = iter(batches)
     for _ in range(steps):
         x, y = next(batch_iter)
-        output = model(x, y)
+        output = model(x)  # Don't pass targets - we compute loss manually for BPB
         logits = output["logits"]  # (B, T, vocab_size)
         # Compute per-token cross-entropy loss
         B, T = x.size()

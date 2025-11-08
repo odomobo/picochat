@@ -306,7 +306,7 @@ class GPT(nn.Module):
                 group["initial_lr"] = group["lr"]
         return optimizers
 
-    def forward(self, idx, targets=None, kv_cache=None):
+    def forward(self, idx, targets=None, kv_cache=None, conviction_loss_weight=0.01):
         B, T = idx.size()
 
         # Grab the rotary embeddings for the current sequence length (they are of shape (1, seq_len, 1, head_dim))
@@ -350,6 +350,26 @@ class GPT(nn.Module):
         if self.config.use_conviction_head:
             output["last_hidden_state"] = last_hidden_state
             output["conviction"] = conviction
+
+        # Compute loss if targets provided (training mode)
+        if targets is not None:
+            # Cross-entropy loss
+            ce_loss = self.compute_cross_entropy_loss(logits, targets, reduction='mean')
+
+            loss_components = {
+                "ce_loss": ce_loss.item(),
+            }
+
+            # Add conviction loss if enabled
+            if self.config.use_conviction_head:
+                conviction_loss = self.compute_conviction_loss(conviction, last_hidden_state, targets)
+                loss_components["conviction_loss"] = conviction_loss.item()
+                total_loss = ce_loss + conviction_loss_weight * conviction_loss
+            else:
+                total_loss = ce_loss
+
+            output["loss"] = total_loss
+            output["loss_components"] = loss_components
 
         return output
 
@@ -433,38 +453,3 @@ class GPT(nn.Module):
 
         return loss
 
-    def compute_training_loss(self, output, targets, conviction_loss_weight=0.01):
-        """
-        Compute the combined training loss for base model pretraining.
-
-        Args:
-            output: Dict from model.forward() containing:
-                - "logits": (B, T, vocab_size)
-                - "conviction": (B, T, 1) if conviction head enabled
-                - "last_hidden_state": (B, T, n_embd) if conviction head enabled
-            targets: (B, T) target token ids
-            conviction_loss_weight: Weight for conviction loss term (default: 0.01)
-
-        Returns:
-            loss: Combined scalar loss (cross-entropy + conviction if enabled)
-            components: Dict with loss breakdown {"ce_loss": float, "conviction_loss": float (optional)}
-        """
-        # Cross-entropy loss on logits
-        logits = output["logits"]
-        ce_loss = self.compute_cross_entropy_loss(logits, targets, reduction='mean')
-
-        components = {
-            "ce_loss": ce_loss.item(),
-        }
-
-        # Add conviction loss if enabled
-        if "conviction" in output:
-            conviction = output["conviction"]  # (B, T, 1)
-            last_hidden_state = output["last_hidden_state"]  # (B, T, n_embd)
-            conviction_loss = self.compute_conviction_loss(conviction, last_hidden_state, targets)
-            components["conviction_loss"] = conviction_loss.item()  # Only add if enabled
-            total_loss = ce_loss + conviction_loss_weight * conviction_loss
-        else:
-            total_loss = ce_loss
-
-        return total_loss, components

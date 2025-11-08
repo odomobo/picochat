@@ -356,8 +356,9 @@ for step in range(num_iterations + 1):
     total_conviction_loss = 0.0
     for micro_step in range(grad_accum_steps):
         with autocast_ctx:
-            output = model(x, y)
-            loss, loss_components = orig_model.compute_training_loss(output, y, conviction_loss_weight)
+            output = model(x, y, conviction_loss_weight=conviction_loss_weight)
+            loss = output["loss"]
+            loss_components = output["loss_components"]
             # Accumulate components
             total_ce_loss += loss_components["ce_loss"]
             if "conviction_loss" in loss_components:
