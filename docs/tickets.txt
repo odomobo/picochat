@@ -21,13 +21,6 @@ Title    : Add parameter to allow conviction to train lm_head
 Status   : PENDING
 ----------
 
----------- TICKET 038
-Title    : investigate gradient norms
-Status   : PENDING
-    output_projection and conviction gradient norms get larger and larger over the course of a run. Why is this, and is there something that can be done to reduce this?
-    Do output_projection grad norms explode like that when conviction is disabled?
-----------
-
 ---------- TICKET 011
 Title    : Create corpus size calculator
 Status   : PENDING
