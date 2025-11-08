@@ -32,12 +32,9 @@ def evaluate_bpb(model, batches, steps, token_bytes):
     batch_iter = iter(batches)
     for _ in range(steps):
         x, y = next(batch_iter)
-        output = model(x)  # Don't pass targets - we compute loss manually for BPB
-        logits = output["logits"]  # (B, T, vocab_size)
-        # Compute per-token cross-entropy loss
-        B, T = x.size()
-        loss2d = model.compute_cross_entropy_loss(logits, y, reduction='none')  # (B*T,)
-        y = y.view(-1) # flatten
+        output = model(x, y, loss_reduction='none')
+        loss2d = output["loss"]  # (B*T,) per-token losses
+        y = y.view(-1)  # flatten
         if (y.int() < 0).any(): # mps does not currently have kernel for < 0 for int64, only int32
             # slightly more complex code path if some target tokens are ignore_index (e.g. -1)
             # any target token < 0 is to be ignored: do NOT index token_bytes with negatives

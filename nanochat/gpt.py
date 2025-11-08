@@ -306,7 +306,7 @@ class GPT(nn.Module):
                 group["initial_lr"] = group["lr"]
         return optimizers
 
-    def forward(self, idx, targets=None, kv_cache=None, conviction_loss_weight=0.01):
+    def forward(self, idx, targets=None, kv_cache=None, conviction_loss_weight=0.01, loss_reduction='mean'):
         B, T = idx.size()
 
         # Grab the rotary embeddings for the current sequence length (they are of shape (1, seq_len, 1, head_dim))
@@ -353,23 +353,28 @@ class GPT(nn.Module):
 
         # Compute loss if targets provided (training mode)
         if targets is not None:
-            # Cross-entropy loss
-            ce_loss = self.compute_cross_entropy_loss(logits, targets, reduction='mean')
+            # Cross-entropy loss with specified reduction
+            ce_loss = self.compute_cross_entropy_loss(logits, targets, reduction=loss_reduction)
 
-            loss_components = {
-                "ce_loss": ce_loss.item(),
-            }
-
-            # Add conviction loss if enabled
-            if self.config.use_conviction_head:
-                conviction_loss = self.compute_conviction_loss(conviction, last_hidden_state, targets)
-                loss_components["conviction_loss"] = conviction_loss.item()
-                total_loss = ce_loss + conviction_loss_weight * conviction_loss
+            # For per-token losses (reduction='none'), only return CE loss (for BPB evaluation)
+            if loss_reduction == 'none':
+                output["loss"] = ce_loss  # (B*T,) per-token losses
             else:
-                total_loss = ce_loss
+                # For scalar losses (reduction='mean'), include conviction loss and components
+                loss_components = {
+                    "ce_loss": ce_loss.item(),
+                }
 
-            output["loss"] = total_loss
-            output["loss_components"] = loss_components
+                # Add conviction loss if enabled
+                if self.config.use_conviction_head:
+                    conviction_loss = self.compute_conviction_loss(conviction, last_hidden_state, targets)
+                    loss_components["conviction_loss"] = conviction_loss.item()
+                    total_loss = ce_loss + conviction_loss_weight * conviction_loss
+                else:
+                    total_loss = ce_loss
+
+                output["loss"] = total_loss
+                output["loss_components"] = loss_components
 
         return output
 
