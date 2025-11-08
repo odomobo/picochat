@@ -86,7 +86,7 @@ def compute_cross_entropy_loss(logits, targets, reduction='mean'):
     return loss
 
 
-def compute_conviction_loss(conviction, last_hidden_state, targets, lm_head):
+def compute_conviction_loss(conviction, last_hidden_state, targets, lm_head, conviction_function="l2_distance"):
     """
     Compute conviction loss (MSE between predicted conviction and alignment target).
 
@@ -95,6 +95,7 @@ def compute_conviction_loss(conviction, last_hidden_state, targets, lm_head):
         last_hidden_state: (B, T, n_embd) - last hidden state before lm_head
         targets: (B, T) - target token ids
         lm_head: nn.Embedding - token embedding layer (e.g., model.transformer.wte)
+        conviction_function: str - which conviction function to use ("l2_distance" or "cosine_similarity")
 
     Returns:
         loss: Scalar conviction loss
@@ -105,8 +106,17 @@ def compute_conviction_loss(conviction, last_hidden_state, targets, lm_head):
         # Get expected token embeddings
         expected_embeds = lm_head(targets)  # (B, T, n_embd)
 
-        # Compute dot product as target (measure of alignment between expected and actual)
-        conviction_target = (expected_embeds * last_hidden_state).sum(dim=-1, keepdim=True)  # (B, T, 1)
+        # Compute conviction target based on chosen function
+        if conviction_function == "l2_distance":
+            # TODO: Implement L2 distance between expected_embeds and last_hidden_state
+            # This should capture both direction and magnitude differences
+            raise NotImplementedError("L2 distance conviction function not yet implemented")
+        elif conviction_function == "cosine_similarity":
+            # TODO: Implement cosine similarity between expected_embeds and last_hidden_state
+            # This captures direction but not magnitude
+            conviction_target = F.cosine_similarity(expected_embeds, last_hidden_state)
+        else:
+            raise ValueError(f"Unknown conviction_function: {conviction_function}. Expected 'l2_distance' or 'cosine_similarity'")
 
     # MSE loss between predicted conviction and target
     loss = F.mse_loss(conviction.squeeze(-1), conviction_target.squeeze(-1))
@@ -143,7 +153,13 @@ def compute_training_loss(output, targets, model, conviction_loss_weight=0.01):
     if "conviction" in output:
         conviction = output["conviction"]  # (B, T, 1)
         last_hidden_state = output["last_hidden_state"]  # (B, T, n_embd)
-        conviction_loss = compute_conviction_loss(conviction, last_hidden_state, targets, model.transformer.wte)
+        conviction_loss = compute_conviction_loss(
+            conviction,
+            last_hidden_state,
+            targets,
+            model.transformer.wte,
+            conviction_function=model.config.conviction_function
+        )
         components["conviction_loss"] = conviction_loss.item()  # Only add if enabled
         total_loss = ce_loss + conviction_loss_weight * conviction_loss
     else:

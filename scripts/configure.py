@@ -199,10 +199,14 @@ def main(dry_run=False):
 
     use_conviction_head = get_bool_input("Enable conviction head?", default=True)
 
-    # Only ask for conviction_loss_weight if conviction head is enabled
+    # Only ask for conviction parameters if conviction head is enabled
     if use_conviction_head:
+        conviction_function = get_string_input("Conviction function (l2_distance, cosine_similarity)", default="l2_distance")
+        if conviction_function not in ["l2_distance", "cosine_similarity"]:
+            print(f"WARNING: Unknown conviction function '{conviction_function}'. Proceeding anyway, but this may cause errors.")
         conviction_loss_weight = get_float_input("Conviction loss weight (relative to cross-entropy loss)", default=0.01)
     else:
+        conviction_function = "l2_distance"  # Default value, unused when use_conviction_head=False
         conviction_loss_weight = 0.01  # Default value, unused when use_conviction_head=False
 
     # Architecture customization
@@ -360,6 +364,7 @@ max_seq_len = {max_seq_len}
 tie_weights = {str(tie_weights)}  # tie wte and lm_head weights (reduces params by ~50%)
 use_output_projection = {use_output_projection}  # output projection layer before lm_head
 use_conviction_head = {use_conviction_head}  # enable conviction head
+conviction_function = "{conviction_function}"  # conviction loss function: l2_distance, cosine_similarity
 activation_fn = "{activation_fn}"  # activation function: relu_squared, relu, gelu
 head_dim = {head_dim}  # attention head dimension
 num_heads = {num_heads}  # number of attention heads
