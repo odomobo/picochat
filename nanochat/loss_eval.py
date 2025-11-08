@@ -114,7 +114,7 @@ def compute_conviction_loss(conviction, last_hidden_state, targets, lm_head, con
         elif conviction_function == "cosine_similarity":
             # TODO: Implement cosine similarity between expected_embeds and last_hidden_state
             # This captures direction but not magnitude
-            conviction_target = F.cosine_similarity(expected_embeds, last_hidden_state)
+            conviction_target = F.cosine_similarity(expected_embeds, last_hidden_state, dim=-1)  # (B, T, n_embd)
         else:
             raise ValueError(f"Unknown conviction_function: {conviction_function}. Expected 'l2_distance' or 'cosine_similarity'")
 
