@@ -57,6 +57,35 @@ def format_token_for_conviction_display(token_text):
 
     return result
 
+def format_float_with_significance(value):
+    """
+    Format a float as 000.0000 with non-significant digits in gray.
+
+    Examples:
+        1.0 -> {GRAY}00{RESET}1.0000
+        0.1234 -> {GRAY}000.{RESET}1234
+        0.0 -> {GRAY}000.0000{RESET}
+    """
+    # Format as 000.0000
+    formatted = f"{value:08.4f}"
+
+    # Find first non-zero digit (excluding decimal point)
+    first_nonzero_idx = -1
+    for i, char in enumerate(formatted):
+        if char not in ('0', '.', '-'):
+            first_nonzero_idx = i
+            break
+
+    # If no non-zero digits found, entire string is gray
+    if first_nonzero_idx == -1:
+        return f"{GRAY}{formatted}{RESET}"
+
+    # Split at first non-zero digit: everything before is gray, from that point is white
+    gray_part = formatted[:first_nonzero_idx]
+    white_part = formatted[first_nonzero_idx:]
+
+    return f"{GRAY}{gray_part}{RESET}{white_part}"
+
 # Init the model and tokenizer
 device_type = autodetect_device_type() if args.device_type == "" else args.device_type
 ddp, ddp_rank, ddp_local_rank, ddp_world_size, device = compute_init(device_type)
@@ -133,7 +162,7 @@ while True:
                     if conviction is None:
                         conviction_str = "N/A"
                     else:
-                        conviction_str = f"{conviction:08.4f}"
+                        conviction_str = format_float_with_significance(conviction)
 
                     print(f"{display_text}| {conviction_str}")
             else:
@@ -143,9 +172,8 @@ while True:
                     token = token_column[0]
                     token_text = tokenizer.decode([token])
                     print(token_text, end="", flush=True)
-
-        # Print final newline after completion
-        print("\n")
+                # Print final newline after completion
+                print()
 
     except KeyboardInterrupt:
         print("\n\nGoodbye!")
