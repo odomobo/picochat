@@ -26,7 +26,7 @@ from nanochat.dataloader import tokenizing_distributed_data_loader
 from nanochat.common import compute_init, compute_cleanup, print0, DummyWandb, print_banner, get_data_dir, get_run_dir, autodetect_device_type
 from nanochat.tokenizer import get_tokenizer, get_token_bytes
 from nanochat.checkpoint_manager import save_checkpoint
-from nanochat.loss_eval import evaluate_bpb, compute_training_loss
+from nanochat.loss_eval import evaluate_bpb
 from nanochat.engine import Engine
 from nanochat.model_calculator import calculate_model_size
 from scripts.base_eval import evaluate_model
@@ -357,7 +357,7 @@ for step in range(num_iterations + 1):
     for micro_step in range(grad_accum_steps):
         with autocast_ctx:
             output = model(x, y)
-            loss, loss_components = compute_training_loss(output, y, orig_model, conviction_loss_weight)
+            loss, loss_components = orig_model.compute_training_loss(output, y, conviction_loss_weight)
             # Accumulate components
             total_ce_loss += loss_components["ce_loss"]
             if "conviction_loss" in loss_components:

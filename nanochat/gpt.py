@@ -384,3 +384,87 @@ class GPT(nn.Module):
             ids = torch.cat((ids, next_ids), dim=1)
             token = next_ids.item()
             yield token
+
+    def compute_cross_entropy_loss(self, logits, targets, reduction='mean'):
+        """
+        Compute cross-entropy loss from logits and targets.
+
+        Args:
+            logits: (B, T, vocab_size) - model predictions
+            targets: (B, T) - target token ids
+            reduction: 'mean', 'sum', or 'none' - reduction method
+
+        Returns:
+            loss: Cross-entropy loss (scalar if reduction='mean'/'sum', (B*T,) if 'none')
+        """
+        logits = logits.float()  # use tf32/fp32 for logits
+        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1, reduction=reduction)
+        return loss
+
+    def compute_conviction_loss(self, conviction, last_hidden_state, targets):
+        """
+        Compute conviction loss (MSE between predicted conviction and alignment target).
+
+        Args:
+            conviction: (B, T, 1) - predicted conviction scores
+            last_hidden_state: (B, T, n_embd) - last hidden state before lm_head
+            targets: (B, T) - target token ids
+
+        Returns:
+            loss: Scalar conviction loss
+        """
+        # Note: we don't want the evaluation of conviction_target to be part of backprop!
+        with torch.no_grad():
+            # Get expected token embeddings
+            expected_embeds = self.transformer.wte(targets)  # (B, T, n_embd)
+
+            # Compute conviction target based on chosen function
+            if self.config.conviction_function == "l2_distance":
+                # L2 distance captures both direction and magnitude differences
+                conviction_target = torch.linalg.norm(expected_embeds - last_hidden_state, dim=-1)
+            elif self.config.conviction_function == "cosine_similarity":
+                # Cosine similarity captures direction but not magnitude
+                conviction_target = F.cosine_similarity(expected_embeds, last_hidden_state, dim=-1)
+            else:
+                raise ValueError(f"Unknown conviction_function: {self.config.conviction_function}. Expected 'l2_distance' or 'cosine_similarity'")
+
+        # MSE loss between predicted conviction and target
+        loss = F.mse_loss(conviction.squeeze(-1), conviction_target)
+
+        return loss
+
+    def compute_training_loss(self, output, targets, conviction_loss_weight=0.01):
+        """
+        Compute the combined training loss for base model pretraining.
+
+        Args:
+            output: Dict from model.forward() containing:
+                - "logits": (B, T, vocab_size)
+                - "conviction": (B, T, 1) if conviction head enabled
+                - "last_hidden_state": (B, T, n_embd) if conviction head enabled
+            targets: (B, T) target token ids
+            conviction_loss_weight: Weight for conviction loss term (default: 0.01)
+
+        Returns:
+            loss: Combined scalar loss (cross-entropy + conviction if enabled)
+            components: Dict with loss breakdown {"ce_loss": float, "conviction_loss": float (optional)}
+        """
+        # Cross-entropy loss on logits
+        logits = output["logits"]
+        ce_loss = self.compute_cross_entropy_loss(logits, targets, reduction='mean')
+
+        components = {
+            "ce_loss": ce_loss.item(),
+        }
+
+        # Add conviction loss if enabled
+        if "conviction" in output:
+            conviction = output["conviction"]  # (B, T, 1)
+            last_hidden_state = output["last_hidden_state"]  # (B, T, n_embd)
+            conviction_loss = self.compute_conviction_loss(conviction, last_hidden_state, targets)
+            components["conviction_loss"] = conviction_loss.item()  # Only add if enabled
+            total_loss = ce_loss + conviction_loss_weight * conviction_loss
+        else:
+            total_loss = ce_loss
+
+        return total_loss, components
