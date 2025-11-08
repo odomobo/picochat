@@ -201,13 +201,13 @@ def main(dry_run=False):
 
     # Only ask for conviction parameters if conviction head is enabled
     if use_conviction_head:
-        conviction_function = get_string_input("Conviction function (l2_distance, cosine_similarity)", default="l2_distance")
+        conviction_function = get_string_input("Conviction function (l2_distance, cosine_similarity)", default="cosine_similarity")
         if conviction_function not in ["l2_distance", "cosine_similarity"]:
             print(f"WARNING: Unknown conviction function '{conviction_function}'. Proceeding anyway, but this may cause errors.")
         conviction_loss_weight = get_float_input("Conviction loss weight (relative to cross-entropy loss)", default=0.01)
         conviction_trains_lm_head = get_bool_input("Should conviction loss train lm_head?", default=False)
     else:
-        conviction_function = "l2_distance"  # Default value, unused when use_conviction_head=False
+        conviction_function = "cosine_similarity"  # Default value, unused when use_conviction_head=False
         conviction_loss_weight = 0.01  # Default value, unused when use_conviction_head=False
         conviction_trains_lm_head = False  # Default value, unused when use_conviction_head=False
 
