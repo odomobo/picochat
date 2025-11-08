@@ -1,4 +1,10 @@
 
+---------- TICKET 013
+Title    : Conviction head completion tool
+Status   : PENDING
+    Since conviction is separate from the text itself, we need a way to run completions and see their conviction. Maybe hack mikupad to show conviction per token? Probably new simple web tool.
+----------
+
 ---------- TICKET 041
 Title    : Try norm after output projection
 Status   : PENDING
@@ -64,13 +70,18 @@ Title    : Calculate optimal hyperparameters
 Status   : ICEBOX
 ----------
 
----------- TICKET 013
-Title    : Conviction head completion tool
-Status   : PENDING
-    Since conviction is separate from the text itself, we need a way to run completions and see their conviction. Maybe hack mikupad to show conviction per token? Probably new simple web tool.
+---------- TICKET 042
+Title    : Recover partially-completed run
+Status   : ICEBOX
+    Make sure enough data is in the metadata json files such that if a run is terminated, then it can be resumed from exactly the state it was in.
+    Give the base_train functionality to resume runs
+---------- TICKET 043
+Title    : Support partial runs
+Status   : ICEBOX
+    give base_train the ability to only perform a partial run, with the expectation that it will be run again for longer. Specify the time in h:mm
 ----------
 
----------- TICKET 042
+---------- TICKET 044
 Title    : 
 Status   : PENDING
 
