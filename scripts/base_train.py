@@ -359,10 +359,10 @@ for step in range(num_iterations + 1):
             output = model(x, y, conviction_loss_weight=conviction_loss_weight)
             loss = output["loss"]
             loss_components = output["loss_components"]
-            # Accumulate components
-            total_ce_loss += loss_components["ce_loss"]
+            # Accumulate components (convert to scalars)
+            total_ce_loss += loss_components["ce_loss"].item()
             if "conviction_loss" in loss_components:
-                total_conviction_loss += loss_components["conviction_loss"]
+                total_conviction_loss += loss_components["conviction_loss"].item()
         train_loss = loss.detach() # for logging
         loss = loss / grad_accum_steps # each .backward() is a grad sum => normalize loss here
         loss.backward()

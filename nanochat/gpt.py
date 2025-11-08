@@ -348,7 +348,6 @@ class GPT(nn.Module):
         # Build output dict
         output = {"logits": logits}
         if self.config.use_conviction_head:
-            output["last_hidden_state"] = last_hidden_state
             output["conviction"] = conviction
 
         # Compute loss if targets provided (training mode)
@@ -356,25 +355,21 @@ class GPT(nn.Module):
             # Cross-entropy loss
             ce_loss = self.compute_cross_entropy_loss(logits, targets, reduction=loss_reduction)
 
-            if loss_reduction == 'none':
-                # Per-token losses for BPB evaluation - just return CE loss
-                output["loss"] = ce_loss  # (B*T,)
+            # loss for training - include conviction loss and components
+            loss_components = {
+                "ce_loss": ce_loss,  # Keep as tensor
+            }
+
+            # Add conviction loss if enabled
+            if self.config.use_conviction_head:
+                conviction_loss = self.compute_conviction_loss(conviction, last_hidden_state, targets)
+                loss_components["conviction_loss"] = conviction_loss  # Keep as tensor
+                total_loss = ce_loss + conviction_loss_weight * conviction_loss
             else:
-                # Scalar loss for training - include conviction loss and components
-                loss_components = {
-                    "ce_loss": ce_loss.item(),
-                }
+                total_loss = ce_loss
 
-                # Add conviction loss if enabled
-                if self.config.use_conviction_head:
-                    conviction_loss = self.compute_conviction_loss(conviction, last_hidden_state, targets)
-                    loss_components["conviction_loss"] = conviction_loss.item()
-                    total_loss = ce_loss + conviction_loss_weight * conviction_loss
-                else:
-                    total_loss = ce_loss
-
-                output["loss"] = total_loss
-                output["loss_components"] = loss_components
+            output["loss"] = total_loss
+            output["loss_components"] = loss_components
 
         return output
 

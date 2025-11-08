@@ -33,7 +33,7 @@ def evaluate_bpb(model, batches, steps, token_bytes):
     for _ in range(steps):
         x, y = next(batch_iter)
         output = model(x, y, loss_reduction='none')
-        loss2d = output["loss"]  # (B*T,) per-token CE losses
+        loss2d = output["ce_loss"]  # (B*T,) per-token CE losses
         y = y.view(-1)  # flatten
         if (y.int() < 0).any(): # mps does not currently have kernel for < 0 for int64, only int32
             # slightly more complex code path if some target tokens are ignore_index (e.g. -1)
